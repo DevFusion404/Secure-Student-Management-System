@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Student Management System - Security Findings</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #222; line-height: 1.45; }
+    h1 { color: #17365d; }
+    h2 { color: #1f4e79; margin-top: 28px; }
+    table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+    th, td { border: 1px solid #888; padding: 8px; vertical-align: top; }
+    th { background: #d9eaf7; }
+    .critical { color: #9c0006; font-weight: bold; }
+    .high { color: #c65911; font-weight: bold; }
+    .medium { color: #9c6500; font-weight: bold; }
+    code { font-family: Consolas, monospace; background: #f2f2f2; padding: 2px 4px; }
+    .note { background: #fff2cc; border: 1px solid #d6b656; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Student Management System - Security Findings</h1>
+  <p><strong>Assessment type:</strong> Read-only source-code security review</p>
+  <p><strong>Scope:</strong> Application PHP files, database configuration, SQL dump, and project documentation</p>
+  <p><strong>Date:</strong> September 16, 2026</p>
+  <p><strong>Status:</strong> Findings only. No application files were modified.</p>
+
+  <div class="note">
+    <strong>Reporting note:</strong> Repeated instances of the same root cause are grouped as one
+    distinct vulnerability class. Third-party vendor libraries were not included unless the
+    application directly introduced the vulnerable behavior.
+  </div>
+
+  <h2>Summary</h2>
+  <p>The review identified <strong>9 distinct vulnerability classes</strong>:</p>
+  <table>
+    <tr>
+      <th>#</th>
+      <th>Severity</th>
+      <th>Vulnerability</th>
+      <th>Confidence</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td class="critical">CRITICAL</td>
+      <td>Broken access control caused by redirect-without-exit</td>
+      <td>10/10</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td class="critical">CRITICAL</td>
+      <td>SQL injection in the login query</td>
+      <td>10/10</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td class="high">HIGH</td>
+      <td>SQL injection throughout CRUD operations</td>
+      <td>10/10</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td class="high">HIGH</td>
+      <td>Stored cross-site scripting in notices</td>
+      <td>9/10</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td class="high">HIGH</td>
+      <td>Insecure direct object reference in student profiles</td>
+      <td>10/10</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td class="medium">MEDIUM</td>
+      <td>Students and parents can delete notices</td>
+      <td>10/10</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td class="medium">MEDIUM</td>
+      <td>Cross-site request forgery on destructive actions</td>
+      <td>9/10</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td class="high">HIGH</td>
+      <td>Insecure password storage using unsalted MD5</td>
+      <td>9/10</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td class="high">HIGH</td>
+      <td>Published default credentials</td>
+      <td>9/10</td>
+    </tr>
+  </table>
+
+  <h2>Detailed Findings</h2>
+
+  <h3>1. Broken Access Control Due to Redirect-Without-Exit</h3>
+  <p><strong>Severity:</strong> <span class="critical">CRITICAL</span> |
+     <strong>Confidence:</strong> 10/10</p>
+  <p><strong>Affected files:</strong>
+    <code>user.php</code>, <code>notice.php</code>, <code>student.php</code>,
+    <code>teacher.php</code>, <code>parent.php</code>, <code>subject.php</code>,
+    <code>class.php</code>, <code>schedule.php</code>, <code>attendance.php</code>,
+    <code>exam.php</code>, <code>examresults.php</code>, and related protected pages.</p>
+  <p><strong>Locations:</strong> Common authorization checks near lines 5-8.</p>
+  <p><strong>Description:</strong> Unauthorized requests receive a redirect header, but execution
+    does not stop with <code>exit</code> or <code>die</code>. PHP therefore continues processing
+    database reads and writes.</p>
+  <p><strong>Impact:</strong> An unauthenticated attacker or a user with the wrong role may directly
+    submit requests to create users, assign Teacher roles, modify records, create notices, or
+    alter examination data.</p>
+
+  <h3>2. SQL Injection in the Login Query</h3>
+  <p><strong>Severity:</strong> <span class="critical">CRITICAL</span> |
+     <strong>Confidence:</strong> 10/10</p>
+  <p><strong>Affected file:</strong> <code>login.php</code>, lines 6-8.</p>
+  <p><strong>Description:</strong> The submitted email is concatenated directly into the
+    authentication SQL query. The HTML email input restriction is client-side only and can be
+    bypassed with a direct HTTP request.</p>
+  <p><strong>Impact:</strong> A crafted email value can bypass authentication. The resulting session
+    role may allow access to Teacher-level administrative functionality.</p>
+
+  <h3>3. SQL Injection Throughout CRUD Operations</h3>
+  <p><strong>Severity:</strong> <span class="high">HIGH</span> |
+     <strong>Confidence:</strong> 10/10</p>
+  <p><strong>Affected files:</strong> <code>user.php</code>, <code>notice.php</code>,
+    <code>notice-role.php</code>, <code>student.php</code>, <code>teacher.php</code>,
+    <code>parent.php</code>, <code>subject.php</code>, <code>class.php</code>,
+    <code>schedule.php</code>, <code>attendance.php</code>, <code>exam.php</code>,
+    <code>examresults.php</code>, <code>attendancelist.php</code>, and
+    <code>profile.php</code>.</p>
+  <p><strong>Locations:</strong> Examples include <code>user.php:11</code>,
+    <code>attendancelist.php:143</code>, <code>student.php:158</code>, and
+    <code>notice.php:111</code>.</p>
+  <p><strong>Description:</strong> GET and POST values are interpolated directly into SQL
+    statements without prepared statements or consistent escaping.</p>
+  <p><strong>Impact:</strong> Attackers may read unauthorized data, alter records, delete records,
+    manipulate account data, or use UNION/boolean-based injection techniques.</p>
+
+  <h3>4. Stored Cross-Site Scripting in Notices</h3>
+  <p><strong>Severity:</strong> <span class="high">HIGH</span> |
+     <strong>Confidence:</strong> 9/10</p>
+  <p><strong>Affected files:</strong> <code>notice.php</code>, lines 91-111 and 273-275;
+    <code>notice-role.php</code>, lines 89-96.</p>
+  <p><strong>Description:</strong> Notice content is accepted from a request, stored in the
+    database, and rendered without HTML output encoding.</p>
+  <p><strong>Impact:</strong> A malicious notice can execute JavaScript whenever students, parents,
+    or teachers view it. The script can perform same-origin actions using the victim's session.</p>
+
+  <h3>5. Insecure Direct Object Reference in Student Profiles</h3>
+  <p><strong>Severity:</strong> <span class="high">HIGH</span> |
+     <strong>Confidence:</strong> 10/10</p>
+  <p><strong>Affected file:</strong> <code>profile.php</code>, lines 14, 19, 35, and 291.</p>
+  <p><strong>Description:</strong> The authenticated student's ID is initially taken from the
+    session, but is overwritten with the submitted <code>sid</code>. The update then uses this
+    attacker-controlled ID in the SQL <code>WHERE</code> clause.</p>
+  <p><strong>Impact:</strong> Any authenticated student may submit another student's ID and modify
+    that student's profile data.</p>
+
+  <h3>6. Students and Parents Can Delete Notices</h3>
+  <p><strong>Severity:</strong> <span class="medium">MEDIUM</span> |
+     <strong>Confidence:</strong> 10/10</p>
+  <p><strong>Affected file:</strong> <code>notice-role.php</code>, lines 5-12.</p>
+  <p><strong>Description:</strong> The page rejects teachers but permits students and parents,
+    while also containing a deletion handler controlled by the <code>delete</code> URL parameter.</p>
+  <p><strong>Impact:</strong> Any authenticated student or parent can request deletion of arbitrary
+    notices, despite the page being intended for viewing.</p>
+
+  <h3>7. Cross-Site Request Forgery on Destructive Actions</h3>
+  <p><strong>Severity:</strong> <span class="medium">MEDIUM</span> |
+     <strong>Confidence:</strong> 9/10</p>
+  <p><strong>Affected files:</strong> <code>user.php</code>, <code>notice.php</code>, and
+    <code>notice-role.php</code>, including deletion handlers near lines 9-12 and generated
+    deletion links near lines 274-314.</p>
+  <p><strong>Description:</strong> Destructive actions are performed with GET requests and have no
+    CSRF token or equivalent request-verification mechanism.</p>
+  <p><strong>Impact:</strong> A malicious website can cause a logged-in user to unknowingly delete
+    users or notices by loading a crafted URL.</p>
+
+  <h3>8. Insecure Password Storage Using Unsalted MD5</h3>
+  <p><strong>Severity:</strong> <span class="high">HIGH</span> |
+     <strong>Confidence:</strong> 9/10</p>
+  <p><strong>Affected files:</strong> <code>login.php:7</code>, <code>user.php:107</code> and
+    <code>user.php:124</code>; password hashes also appear in
+    <code>Database/student-management-system.sql:323-326</code>.</p>
+  <p><strong>Description:</strong> Passwords are hashed and verified using unsalted MD5, which is
+    not suitable for password storage.</p>
+  <p><strong>Impact:</strong> If the database is disclosed, password hashes can be cracked cheaply.
+    Recovered passwords may then be reused to compromise accounts.</p>
+
+  <h3>9. Published Default Credentials</h3>
+  <p><strong>Severity:</strong> <span class="high">HIGH</span> |
+     <strong>Confidence:</strong> 9/10</p>
+  <p><strong>Affected files:</strong> <code>README.md:48-52</code> and
+    <code>Database/student-management-system.sql:323-326</code>.</p>
+  <p><strong>Description:</strong> The repository documents default credentials for Teacher,
+    Student, and Parent accounts, and the SQL dump creates those accounts with the same passwords.</p>
+  <p><strong>Impact:</strong> Any deployment that keeps the supplied credentials is immediately
+    accessible to anyone who can reach the application. The known Teacher account provides
+    administrative access.</p>
+
+  <h2>Conclusion</h2>
+  <p>The most severe risks are the authentication SQL injection, the application-wide broken
+    authorization checks, and the widespread SQL injection. These issues can combine to provide
+    unauthenticated administrative access and database manipulation.</p>
+  <p>This document records the findings only; no remediation was performed.</p>
+</body>
+</html>
