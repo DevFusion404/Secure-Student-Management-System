@@ -2,10 +2,17 @@
 
 
 include_once 'database.php';
-if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
-  # code...
-  header('Location:./logout.php');
-  exit;
+if (!isset($_SESSION['user'])) {
+    // Redirect unauthenticated users and terminate execution
+    // to prevent protected page content from being served.
+    header('Location:./logout.php');
+    exit();
+}
+
+if (($_SESSION['role'] ?? '') !== 'Teacher') {
+    // Only teachers may manage user accounts.
+    header('Location:./logout.php');
+    exit();
 }
 
 // CSRF: reject any POST without a valid token before any data is changed.
