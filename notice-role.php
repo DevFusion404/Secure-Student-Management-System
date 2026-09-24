@@ -2,16 +2,38 @@
 
 
 include_once 'database.php';
-if (!isset($_SESSION['user'])||$_SESSION['role']=='Teacher') {
-  # code...
-  header('Location:./logout.php');
-}
-if (isset($_GET['delete'])) {
 
-  $sql = "DELETE FROM notice WHERE id='".$_GET['delete']."'";
-  $conn->query($sql);
-   # code...
+// Any delete attempt must fail with the forbidden response before the login
+// redirect can run. This prevents a 302 redirect from masking the block.
+if (isset($_GET['delete']) || isset($_POST['delete'])) {
+    http_response_code(403);
+    exit("Forbidden: notice deletion is not allowed via URL parameters.");
 }
+
+if (!isset($_SESSION['user'])) {
+    header('Location:./logout.php');
+    exit();
+}
+
+
+// Students and Parents have view-only access to notices.
+if (
+    $_SESSION['role'] != 'Student' &&
+    $_SESSION['role'] != 'Parent'
+) {
+
+    http_response_code(403);
+    exit("Unauthorized access");
+
+}
+
+// CSRF: reject any POST without a valid token before any data is changed.
+include_once 'csrf.php';
+verifyCSRFOnPost();
+
+// This is the read-only notice view for Students/Parents. The former
+// GET ?delete= handler was removed: only Teachers may delete notices
+// (via notice.php, which is POST + CSRF protected).
 ?>
 
 <!DOCTYPE html>
