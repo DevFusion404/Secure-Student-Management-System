@@ -118,7 +118,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   if (isset($_POST['submit'])) {
                     if($_POST['submit'] == 'update_user') {
                       $email = $_GET['email'];
-                      $password = md5($_POST['password']);
+                      $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
                       $role = $_POST['role'];
                       try {
 
@@ -135,7 +135,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                      }
                    } else {
                      $email = $_POST['email'];
-                     $password = md5($_POST['password']);
+                     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
                      $role = $_POST['role'];
 
                      try {
