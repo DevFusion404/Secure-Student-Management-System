@@ -5,12 +5,19 @@ include_once 'database.php';
 if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
   # code...
   header('Location:./logout.php');
+  exit;
 }
-if (isset($_GET['delete'])) {
 
-  $sql = "DELETE FROM notice WHERE id='".$_GET['delete']."'";
-  $conn->query($sql);
-   # code...
+// CSRF: reject any POST without a valid token before any data is changed.
+include_once 'csrf.php';
+verifyCSRFOnPost();
+
+// Delete is POST-only (token already verified above); GET ?delete= is ignored.
+if (isset($_POST['delete'])) {
+  $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
+  $stmt->bind_param("i", $_POST['delete']);
+  $stmt->execute();
+  $stmt->close();
 }
 ?>
 <?php
@@ -184,6 +191,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
              ?>
 
              <form role="form" method="POST" >
+               <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
               <div class="box-body">
 
 
@@ -271,7 +279,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
                       echo "<tr><td> " . $row["id"]. " </td><td> " . $row["notice"]." </td><td> " . $row["date"]." </td>
-                      <td><a href='notice.php?delete=". $row["id"]."' class='btn btn-sm btn-danger  delete-notice'><small class='label  bg-red'>Delete</small></a>
+                      <td><form method='POST' action='notice.php' class='delete-notice' style='display:inline'>
+                        <input type='hidden' name='csrf_token' value='" . generateCSRFToken() . "'>
+                        <input type='hidden' name='delete' value='" . htmlspecialchars($row["id"], ENT_QUOTES, 'UTF-8') . "'>
+                        <button type='submit' class='btn btn-sm btn-danger'><small class='label  bg-red'>Delete</small></button>
+                      </form>
                       </td></tr>";
                     }
                   }
@@ -313,7 +325,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
     format: 'hh:mm A'
   });
 
-  $('a.delete-notice').click(function(){
+  $('form.delete-notice').submit(function(){
     return confirm("Are you sure you want to delete?");
   });
 </script>
