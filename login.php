@@ -103,6 +103,12 @@ if (isset($_POST['submit'])) {
               <!-- /.col -->
               <div class="col-xs-12">
                 <button name="submit" value="submit" type="submit" class="btn btn-success btn-block btn-flat">Sign In</button>
+                <br>
+                <a href="google-login.php" 
+                class="btn btn-primary btn-block btn-flat">
+                  <i class="fa fa-google"></i>
+                  Sign in with Google
+                </a>
               </div>
               <!-- /.col -->
               <div>
