@@ -20,6 +20,14 @@ if (isset($_POST['submit'])) {
     $row = $result->fetch_assoc();
 
     if (password_verify($password, $row['password'])) {
+      session_regenerate_id(true);
+
+      if ($row['must_change_password'] == 1) {
+        $_SESSION['change_password_email'] = $row['email'];
+        header("Location:change-password.php");
+        exit();
+      }
+
       $_SESSION['role'] = $row['role'];
       $_SESSION['user'] = $row['fname']." ".$row['lname'];
 
