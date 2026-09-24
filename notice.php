@@ -10,36 +10,33 @@ if (!isset($_SESSION['user'])) {
 }
 
 // Only authorized Teachers can delete notices.
-if ($_SESSION['role'] != 'Teacher') {
-
+if (($_SESSION['role'] ?? '') !== 'Teacher') {
     http_response_code(403);
     exit("Unauthorized access");
-
 }
 
 // CSRF: reject any POST without a valid token before any data is changed.
 include_once 'csrf.php';
 verifyCSRFOnPost();
 
-// Delete is POST-only (token already verified above); GET ?delete= is ignored.
-if (
-    // Only Teachers can manage and delete notices.
+// DELETE operations must be teacher-only POST requests. GET requests and
+// forged POST requests are rejected before any mutation occurs.
+if (isset($_GET['delete'])) {
+    http_response_code(403);
+    exit("Forbidden: notice deletion is not allowed via URL parameters.");
+}
 
-    isset($_POST['delete']) &&
-    $_SESSION['role'] == 'Teacher'
-) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
+    $deleteId = filter_var($_POST['delete'], FILTER_VALIDATE_INT);
 
-    $stmt = $conn->prepare(
-        "DELETE FROM notice WHERE id = ?"
-    );
+    if ($deleteId === false || $deleteId <= 0) {
+        http_response_code(400);
+        exit("Invalid notice ID.");
+    }
 
-    $stmt->bind_param(
-        "i",
-        $_POST['delete']
-    );
-
+    $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
+    $stmt->bind_param("i", $deleteId);
     $stmt->execute();
-
     $stmt->close();
 }
 ?>
