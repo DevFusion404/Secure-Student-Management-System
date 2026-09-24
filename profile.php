@@ -34,7 +34,7 @@ if($_SESSION['role']=='Student'){
     $dob = date_format(
         new DateTime($_POST['dob']),
         'Y-m-d'
-                //echo $dob;
+    );
     $gender = $_POST['gender'];
     $address = $_POST['address'];
 
