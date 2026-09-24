@@ -2,10 +2,45 @@
 
 
 include_once 'database.php';
-if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
-  # code...
-  header('Location:./logout.php');
-  exit;
+
+// Delete attempts must always fail with a forbidden response, even if the user
+// is not authenticated or is not a Teacher. This prevents a 302 redirect from
+// the login guard from masking the real authorization failure.
+if (isset($_GET['delete']) || isset($_POST['delete'])) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(403);
+        exit("Forbidden: notice deletion is not allowed via URL parameters.");
+    }
+
+    if (($_SESSION['role'] ?? '') !== 'Teacher') {
+        http_response_code(403);
+        exit("Unauthorized access");
+    }
+
+    include_once 'csrf.php';
+    verifyCSRFOnPost();
+
+    $deleteId = filter_var($_POST['delete'], FILTER_VALIDATE_INT);
+    if ($deleteId === false || $deleteId <= 0) {
+        http_response_code(400);
+        exit("Invalid notice ID.");
+    }
+
+    $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
+    $stmt->bind_param("i", $deleteId);
+    $stmt->execute();
+    $stmt->close();
+}
+
+if (!isset($_SESSION['user'])) {
+    header('Location:./logout.php');
+    exit();
+}
+
+// Only authorized Teachers can delete notices.
+if (($_SESSION['role'] ?? '') !== 'Teacher') {
+    http_response_code(403);
+    exit("Unauthorized access");
 }
 
 // CSRF: reject any POST without a valid token before any data is changed.

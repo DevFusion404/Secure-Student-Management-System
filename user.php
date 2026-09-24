@@ -2,10 +2,17 @@
 
 
 include_once 'database.php';
-if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
-  # code...
-  header('Location:./logout.php');
-  exit;
+if (!isset($_SESSION['user'])) {
+    // Redirect unauthenticated users and terminate execution
+    // to prevent protected page content from being served.
+    header('Location:./logout.php');
+    exit();
+}
+
+if (($_SESSION['role'] ?? '') !== 'Teacher') {
+    // Only teachers may manage user accounts.
+    header('Location:./logout.php');
+    exit();
 }
 
 // CSRF: reject any POST without a valid token before any data is changed.
@@ -134,7 +141,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   if (isset($_POST['submit'])) {
                     if($_POST['submit'] == 'update_user') {
                       $email = $_GET['email'];
-                      $password = md5($_POST['password']);
+                      $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
                       $role = $_POST['role'];
                       try {
 
@@ -151,7 +158,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                      }
                    } else {
                      $email = $_POST['email'];
-                     $password = md5($_POST['password']);
+                     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
                      $role = $_POST['role'];
 
                      try {
