@@ -5,7 +5,12 @@ include_once 'database.php';
 if (!isset($_SESSION['user'])) {
   # code...
   header('Location:./logout.php');
+  exit;
 }
+
+// CSRF: reject any POST without a valid token before any data is changed.
+include_once 'csrf.php';
+verifyCSRFOnPost();
 ?>
 <?php
 
@@ -253,6 +258,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
               <div class="x_content">
 
                 <form method="POST">
+                  <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
 
 
 

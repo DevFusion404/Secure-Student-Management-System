@@ -5,13 +5,16 @@ include_once 'database.php';
 if (!isset($_SESSION['user'])||$_SESSION['role']=='Teacher') {
   # code...
   header('Location:./logout.php');
+  exit;
 }
-if (isset($_GET['delete'])) {
 
-  $sql = "DELETE FROM notice WHERE id='".$_GET['delete']."'";
-  $conn->query($sql);
-   # code...
-}
+// CSRF: reject any POST without a valid token before any data is changed.
+include_once 'csrf.php';
+verifyCSRFOnPost();
+
+// This is the read-only notice view for Students/Parents. The former
+// GET ?delete= handler was removed: only Teachers may delete notices
+// (via notice.php, which is POST + CSRF protected).
 ?>
 
 <!DOCTYPE html>

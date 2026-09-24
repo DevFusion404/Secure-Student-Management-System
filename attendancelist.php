@@ -5,7 +5,12 @@ include_once 'database.php';
 if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
   # code...
   header('Location:./logout.php');
+  exit;
 }
+
+// CSRF: reject any POST without a valid token before any data is changed.
+include_once 'csrf.php';
+verifyCSRFOnPost();
 ?>
 <?php
 
@@ -99,6 +104,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
             <!-- /.box-header -->
             <!-- form start -->
             <form role="form" method="POST" >
+              <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
               <div class="box-body">
 
                   <div class="form-group">
@@ -209,6 +215,7 @@ x.style.display='block';</script>";
             
             <!-- /.box-header -->
             <div class="box-body"><form action="" method="post">
+              <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
               <table id="example1" class="table table-bordered table-striped">
                 <thead>
                 <tr>
@@ -280,6 +287,7 @@ x.style.display='block';</script>";
             
             <!-- /.box-header -->
             <div class="box-body"><form action="" method="post">
+              <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
               <table id="example1" class="table table-bordered table-striped">
                 <thead>
                 <tr>
