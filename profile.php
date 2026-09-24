@@ -13,6 +13,27 @@ if (!isset($_SESSION['user'])) {
 // CSRF: reject any POST without a valid token before any data is changed.
 include_once 'csrf.php';
 verifyCSRFOnPost();
+
+// Prevent a user from submitting a different profile ID in the request.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sessionUid = $_SESSION['uid'] ?? null;
+    $role = $_SESSION['role'] ?? '';
+
+    if ($role === 'Student' && isset($_POST['sid']) && trim((string) $_POST['sid']) !== (string) $sessionUid) {
+        http_response_code(403);
+        exit('Forbidden: you can only update your own profile.');
+    }
+
+    if ($role === 'Parent' && isset($_POST['pid']) && trim((string) $_POST['pid']) !== (string) $sessionUid) {
+        http_response_code(403);
+        exit('Forbidden: you can only update your own profile.');
+    }
+
+    if ($role === 'Teacher' && isset($_POST['tid']) && trim((string) $_POST['tid']) !== (string) $sessionUid) {
+        http_response_code(403);
+        exit('Forbidden: you can only update your own profile.');
+    }
+}
 ?>
 <?php
 
@@ -301,7 +322,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                              <div class="col-md-12">
                               <div class="form-group">
                                 <label for="exampleInputPassword1">Student ID</label>
-                                <input name="sid" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$sid."'"; ?>>
+                                <input name="sid" type="text" class="form-control" id="exampleInputPassword1" readonly required value=<?php echo "'".$sid."'"; ?>>
                               </div>
                             </div>
 
@@ -453,7 +474,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleInputPassword1">Teacher ID</label>
-                            <input name="tid" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$tid."'"; ?>>
+                            <input name="tid" type="text" class="form-control" id="exampleInputPassword1" readonly required value=<?php echo "'".$tid."'"; ?>>
                           </div>
                         </div>
 
