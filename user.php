@@ -5,12 +5,19 @@ include_once 'database.php';
 if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
   # code...
   header('Location:./logout.php');
+  exit;
 }
-if (isset($_GET['delete'])) {
 
-  $sql = "DELETE FROM user WHERE email='".$_GET['delete']."'";
-  $conn->query($sql);
-   # code...
+// CSRF: reject any POST without a valid token before any data is changed.
+include_once 'csrf.php';
+verifyCSRFOnPost();
+
+// Delete is POST-only (token already verified above); GET ?delete= is ignored.
+if (isset($_POST['delete'])) {
+  $stmt = $conn->prepare("DELETE FROM user WHERE email = ?");
+  $stmt->bind_param("s", $_POST['delete']);
+  $stmt->execute();
+  $stmt->close();
 }
 ?>
 <?php
@@ -199,6 +206,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
            ?>
 
            <form role="form" method="POST" >
+             <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
             <div class="box-body">
 
 
@@ -311,7 +319,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // output data of each row
                        while($row = $result->fetch_assoc()) {
                         echo "<tr><td> " . $row["email"]. " </td><td> " . $row["role"]." </td>
-                        <td><a href='user.php?delete=". $row["email"]."' class='delete-user'><small class='btn btn-sm btn-primary'>Delete</small></a><br><a href='user.php?email=". $row["email"]."' class='update-user'><small class='btn btn-sm btn-danger'>Update</small></a>
+                        <td><form method='POST' action='user.php' class='delete-user' style='display:inline'>
+                          <input type='hidden' name='csrf_token' value='" . generateCSRFToken() . "'>
+                          <input type='hidden' name='delete' value='" . htmlspecialchars($row["email"], ENT_QUOTES, 'UTF-8') . "'>
+                          <button type='submit' class='btn btn-sm btn-primary'><small>Delete</small></button>
+                        </form><br><a href='user.php?email=". $row["email"]."' class='update-user'><small class='btn btn-sm btn-danger'>Update</small></a>
                         </td></tr>";
                       }
                     }
@@ -353,7 +365,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
     format: 'hh:mm A'
   });
 
-  $('a.delete-user').click(function(){
+  $('form.delete-user').submit(function(){
     return confirm("Are you sure you want to delete?");
   });
 </script>
