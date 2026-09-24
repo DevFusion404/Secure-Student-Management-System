@@ -3,9 +3,10 @@
 
 include_once 'database.php';
 if (!isset($_SESSION['user'])) {
-  # code...
-  header('Location:./logout.php');
-  exit;
+
+    header('Location:./logout.php');
+    exit();
+
 }
 
 // CSRF: reject any POST without a valid token before any data is changed.
