@@ -23,12 +23,17 @@ if($_SESSION['role']=='Student'){
 
   if (isset($_POST['submit'])) {
 
-    $sid = $_POST['sid'];
+    // Use the authenticated user's ID instead of trusting a
+    // user-supplied student ID to prevent unauthorized profile updates.
+    $sid = $_SESSION['uid'];
+
+
     $fname = $_POST['fname'];
     $lname = $_POST['lname'];
     $classroom = $_POST['classroom'];
-    $email = $_POST['email'];
-    $dob = date_format(new DateTime($_POST['dob']),'Y-m-d');
+    $dob = date_format(
+        new DateTime($_POST['dob']),
+        'Y-m-d'
                 //echo $dob;
     $gender = $_POST['gender'];
     $address = $_POST['address'];
