@@ -3,7 +3,8 @@
 
 include_once 'database.php';
 if (!isset($_SESSION['user'])) {
-
+    // Redirect unauthenticated users and terminate execution
+    // to prevent protected page content from being served.
     header('Location:./logout.php');
     exit();
 
