@@ -1,0 +1,384 @@
+.google-callback-page {
+  min-height: 100vh;
+  margin: 0;
+  color: #405467;
+  background: #f3f6f8;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.google-page-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 80% 0, rgba(26, 187, 156, .14), transparent 34%), #f3f6f8;
+}
+
+.google-topbar {
+  height: 78px;
+  padding: 0 7%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  background: #2a3f54;
+  box-shadow: 0 3px 14px rgba(42, 63, 84, .18);
+}
+
+.google-brand,
+.google-brand:hover,
+.google-brand:focus {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  text-decoration: none;
+}
+
+.google-brand-icon {
+  width: 42px;
+  height: 42px;
+  margin-right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #2a3f54;
+  font-size: 20px;
+  border-radius: 50%;
+  background: #1abb9c;
+}
+
+.google-brand strong,
+.google-brand small {
+  display: block;
+}
+
+.google-brand strong {
+  font-size: 16px;
+}
+
+.google-brand small {
+  margin-top: 3px;
+  color: #b9c7d3;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.google-logout {
+  color: #d9e2e9;
+  font-size: 13px;
+  text-decoration: none;
+  transition: color .2s ease;
+}
+
+.google-logout:hover,
+.google-logout:focus {
+  color: #1abb9c;
+  text-decoration: none;
+}
+
+.google-logout i {
+  margin-right: 5px;
+}
+
+.google-main {
+  width: 92%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 72px 0 45px;
+  flex: 1;
+}
+
+.google-welcome-card {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 48px 55px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  border: 1px solid #e4ebef;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 14px 42px rgba(42, 63, 84, .10);
+  animation: google-card-in .55s ease both;
+}
+
+.google-welcome-card:before {
+  content: "";
+  height: 4px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #1abb9c;
+}
+
+.google-success-mark {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 30px;
+  border-radius: 50%;
+  background: #1abb9c;
+  box-shadow: 0 8px 20px rgba(26, 187, 156, .28);
+}
+
+.google-success-mark.error {
+  background: #e74c3c;
+  box-shadow: 0 8px 20px rgba(231, 76, 60, .22);
+}
+
+.google-eyebrow {
+  margin-bottom: 12px;
+  color: #1abb9c;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.google-eyebrow i {
+  margin-right: 4px;
+}
+
+.google-welcome-card h1 {
+  margin: 0 0 13px;
+  color: #2a3f54;
+  font-size: 34px;
+  font-weight: 400;
+}
+
+.google-lead {
+  max-width: 560px;
+  margin: 0 auto 28px;
+  color: #73879c;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.google-account {
+  max-width: 390px;
+  margin: 0 auto 28px;
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  border: 1px solid #e7edef;
+  border-radius: 5px;
+  background: #fafcfd;
+}
+
+.google-avatar {
+  width: 42px;
+  height: 42px;
+  margin-right: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #2a3f54;
+  border-radius: 50%;
+  background: #dff6f0;
+}
+
+.google-account strong,
+.google-account small {
+  display: block;
+}
+
+.google-account strong {
+  color: #2a3f54;
+  font-size: 13px;
+}
+
+.google-account small {
+  margin-top: 3px;
+  color: #8a9aa8;
+  font-size: 12px;
+}
+
+.google-account-status {
+  margin-left: auto;
+  color: #1abb9c;
+  font-size: 11px;
+}
+
+.google-account-status i {
+  margin-right: 3px;
+  font-size: 8px;
+}
+
+.google-actions .btn {
+  margin: 0 4px 7px;
+  padding: 11px 21px;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.google-actions .btn:hover,
+.google-primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 16px rgba(42, 63, 84, .16);
+}
+
+.google-primary-button {
+  color: #fff;
+  background: #1abb9c;
+  border-color: #1abb9c;
+}
+
+.google-primary-button:hover,
+.google-primary-button:focus {
+  color: #fff;
+  background: #169f86;
+  border-color: #169f86;
+}
+
+.google-secondary-button {
+  color: #2a3f54;
+  background: #fff;
+  border-color: #dce5ea;
+}
+
+.google-secondary-button:hover,
+.google-secondary-button:focus {
+  color: #1abb9c;
+  border-color: #1abb9c;
+}
+
+.google-feature-row {
+  display: flex;
+  margin: 30px -10px 0;
+}
+
+.google-feature-card {
+  flex: 1;
+  margin: 0 10px;
+  padding: 24px 20px;
+  text-align: center;
+  border: 1px solid #e4ebef;
+  border-radius: 6px;
+  background: #fff;
+  animation: google-card-in .55s ease both;
+}
+
+.google-feature-card:nth-child(2) {
+  animation-delay: .1s;
+}
+
+.google-feature-card:nth-child(3) {
+  animation-delay: .2s;
+}
+
+.google-feature-icon {
+  width: 45px;
+  height: 45px;
+  margin: 0 auto 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  border-radius: 50%;
+}
+
+.google-feature-icon.green {
+  color: #1abb9c;
+  background: #e3f8f3;
+}
+
+.google-feature-icon.blue {
+  color: #3498db;
+  background: #e7f3fb;
+}
+
+.google-feature-icon.gold {
+  color: #f0ad4e;
+  background: #fff5e3;
+}
+
+.google-feature-card h3 {
+  margin: 0 0 8px;
+  color: #2a3f54;
+  font-size: 15px;
+}
+
+.google-feature-card p {
+  margin: 0;
+  color: #8a9aa8;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.google-footer {
+  padding: 20px 7%;
+  display: flex;
+  justify-content: space-between;
+  color: #8a9aa8;
+  font-size: 11px;
+  border-top: 1px solid #e2e9ed;
+}
+
+.google-footer i {
+  margin-right: 4px;
+  color: #1abb9c;
+}
+
+@keyframes google-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 767px) {
+  .google-topbar {
+    height: auto;
+    padding: 16px 5%;
+  }
+
+  .google-logout {
+    font-size: 0;
+  }
+
+  .google-logout i {
+    font-size: 16px;
+  }
+
+  .google-main {
+    padding: 38px 0 30px;
+  }
+
+  .google-welcome-card {
+    padding: 38px 20px;
+  }
+
+  .google-welcome-card h1 {
+    font-size: 27px;
+  }
+
+  .google-feature-row {
+    display: block;
+    margin: 20px 0 0;
+  }
+
+  .google-feature-card {
+    margin: 10px 0;
+  }
+
+  .google-footer {
+    display: block;
+    text-align: center;
+  }
+
+  .google-footer span {
+    display: block;
+    margin: 5px 0;
+  }
+}
