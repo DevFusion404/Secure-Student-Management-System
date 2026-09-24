@@ -18,8 +18,10 @@ $tid =$fname =$lname = $classroom = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM teacher WHERE tid='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM teacher WHERE tid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -108,9 +110,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO teacher (tid,fname,lname,bday,address,gender,skill,contact,email) VALUES ('".$tid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$skill."','".$contact."','".$email."')";
+                      $stmt = $conn->prepare("INSERT INTO teacher (tid, fname, lname, bday, address, gender, skill, contact, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                      $stmt->bind_param("sssssssss", $tid, $fname, $lname, $dob, $address, $gender, $skill, $contact, $email);
 
-                      if ($conn->query($sql) === TRUE) {
+                      if ($stmt->execute()) {
                        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                        x.style.display='block';</script>";
                      } else {
@@ -158,11 +161,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   try {
 
 
-                   $sql = "UPDATE teacher SET fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',skill='".$skill."',contact='".$contact."',email='".$email."' WHERE tid = '".$tid."'";
+                   $stmt = $conn->prepare("UPDATE teacher SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, skill = ?, contact = ?, email = ? WHERE tid = ?");
+                   $stmt->bind_param("sssssssss", $fname, $lname, $dob, $address, $gender, $skill, $contact, $email, $tid);
 
                    // $sql = "INSERT INTO Teacher (tid,fname,lname,bday,address,gender,skill,contact,email) VALUES ('".$tid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$skill."','".$contact."','".$email."')";
 
-                   if ($conn->query($sql) === TRUE) {
+                   if ($stmt->execute()) {
                      echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                      x.style.display='block';</script>";
                    } else {

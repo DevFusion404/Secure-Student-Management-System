@@ -34,8 +34,10 @@ $sid =$fname =$lname = $user = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM user WHERE sid='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM user WHERE sid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -55,8 +57,10 @@ if(isset($_GET['update'])){
   }
 }
 if(isset($_GET['email'])){
-  $update = "SELECT * FROM user WHERE email='".$_GET['email']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM user WHERE email = ?");
+  $stmt->bind_param("s", $_GET['email']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -122,9 +126,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
                       $role = $_POST['role'];
                       try {
 
-                        $sql = "UPDATE user set password='".$password."',role='".$role."' where email='".$email."'";
+                        $stmt = $conn->prepare("UPDATE user SET password = ?, role = ? WHERE email = ?");
+                        $stmt->bind_param("sss", $password, $role, $email);
 
-                        if ($conn->query($sql) === TRUE) {
+                        if ($stmt->execute()) {
                          echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                          x.style.display='block';</script>";
                        } else {
@@ -140,9 +145,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                      try {
 
-                      $sql = "INSERT INTO user(email,password,role) VALUES ('".$email."', '".$password."', '".$role."')";
+                       $stmt = $conn->prepare("INSERT INTO user(email, password, role) VALUES (?, ?, ?)");
+                       $stmt->bind_param("sss", $email, $password, $role);
 
-                      if ($conn->query($sql) === TRUE) {
+                       if ($stmt->execute()) {
                        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                        x.style.display='block';</script>";
                      } else {
@@ -186,12 +192,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 try {
 
-                  $sql = "UPDATE user set fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',parent=".$parent.",user='".$user."',email='".$email."' where sid='".$sid."'";
+                  $stmt = $conn->prepare("UPDATE user SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, parent = ?, user = ?, email = ? WHERE sid = ?");
+                  $stmt->bind_param("sssssssss", $fname, $lname, $dob, $address, $gender, $parent, $user, $email, $sid);
 
 
                    // $sql = "INSERT INTO user (sid,fname,lname,bday,address,gender,parent,user) VALUES ('".$sid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$user."')";
 
-                  if ($conn->query($sql) === TRUE) {
+                  if ($stmt->execute()) {
                    echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                    x.style.display='block';</script>";
                  } else {

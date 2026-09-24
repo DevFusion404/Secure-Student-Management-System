@@ -18,8 +18,10 @@ $pid =$fname =$lname = $classroom = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM parent WHERE pid='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM parent WHERE pid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -108,9 +110,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO parent (fname,lname,address,gender,job,contact,nic,email) VALUES ( '".$fname."', '".$lname."','".$address."','".$gender."','".$job."','".$contact."','".$nic."','".$email."')";
+                      $stmt = $conn->prepare("INSERT INTO parent (fname, lname, address, gender, job, contact, nic, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                      $stmt->bind_param("ssssssss", $fname, $lname, $address, $gender, $job, $contact, $nic, $email);
 
-                      if ($conn->query($sql) === TRUE) {
+                      if ($stmt->execute()) {
                        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                        x.style.display='block';</script>";
                      } else {
@@ -159,11 +162,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   try {
 
 
-                   $sql = "UPDATE parent SET fname='".$fname."',lname='".$lname."',address='".$address."',gender='".$gender."',job='".$job."',contact='".$contact."',email='".$email."',nic='".$nic."' WHERE pid =".$pid;
+                   $stmt = $conn->prepare("UPDATE parent SET fname = ?, lname = ?, address = ?, gender = ?, job = ?, contact = ?, email = ?, nic = ? WHERE pid = ?");
+                   $stmt->bind_param("sssssssss", $fname, $lname, $address, $gender, $job, $contact, $email, $nic, $pid);
 
                    // $sql = "INSERT INTO Parent (fname,lname,address,gender,job,contact,nic,email) VALUES ( '".$fname."', '".$lname."','".$address."','".$gender."','".$job."','".$contact."','".$nic."','".$email."')";
 
-                   if ($conn->query($sql) === TRUE) {
+                   if ($stmt->execute()) {
                      echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                      x.style.display='block';</script>";
                    } else {
