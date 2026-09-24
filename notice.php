@@ -12,12 +12,35 @@ if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
 include_once 'csrf.php';
 verifyCSRFOnPost();
 
-// Delete is POST-only (token already verified above); GET ?delete= is ignored.
+// Delete is POST-only; GET ?delete= is ignored.
+// Checks: 1) CSRF token (verified above), 2) authorization (Teacher-only
+// guard above), 3) the notice must exist.
 if (isset($_POST['delete'])) {
+  $id = filter_var($_POST['delete'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
+  if ($id === false) {
+    http_response_code(400);
+    exit('Invalid notice ID.');
+  }
+
+  $stmt = $conn->prepare("SELECT id FROM notice WHERE id = ?");
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $stmt->store_result();
+  $exists = $stmt->num_rows > 0;
+  $stmt->close();
+  if (!$exists) {
+    http_response_code(404);
+    exit('Notice not found.');
+  }
+
   $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
-  $stmt->bind_param("i", $_POST['delete']);
+  $stmt->bind_param("i", $id);
   $stmt->execute();
   $stmt->close();
+
+  // Post/Redirect/Get: a page refresh must not resubmit the delete.
+  header('Location: notice.php');
+  exit;
 }
 ?>
 <?php
