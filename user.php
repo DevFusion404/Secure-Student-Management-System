@@ -19,12 +19,35 @@ if (($_SESSION['role'] ?? '') !== 'Teacher') {
 include_once 'csrf.php';
 verifyCSRFOnPost();
 
-// Delete is POST-only (token already verified above); GET ?delete= is ignored.
+// Delete is POST-only; GET ?delete= is ignored.
+// Checks: 1) CSRF token (verified above), 2) authorization (Teacher-only
+// guard above), 3) the user account must exist.
 if (isset($_POST['delete'])) {
+  $email = is_string($_POST['delete']) ? trim($_POST['delete']) : '';
+  if ($email === '') {
+    http_response_code(400);
+    exit('Invalid user email.');
+  }
+
+  $stmt = $conn->prepare("SELECT email FROM user WHERE email = ?");
+  $stmt->bind_param("s", $email);
+  $stmt->execute();
+  $stmt->store_result();
+  $exists = $stmt->num_rows > 0;
+  $stmt->close();
+  if (!$exists) {
+    http_response_code(404);
+    exit('User not found.');
+  }
+
   $stmt = $conn->prepare("DELETE FROM user WHERE email = ?");
-  $stmt->bind_param("s", $_POST['delete']);
+  $stmt->bind_param("s", $email);
   $stmt->execute();
   $stmt->close();
+
+  // Post/Redirect/Get: a page refresh must not resubmit the delete.
+  header('Location: user.php');
+  exit;
 }
 ?>
 <?php
