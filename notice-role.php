@@ -2,10 +2,23 @@
 
 
 include_once 'database.php';
-if (!isset($_SESSION['user'])||$_SESSION['role']=='Teacher') {
-  # code...
-  header('Location:./logout.php');
-  exit;
+if (!isset($_SESSION['user'])) {
+
+    header('Location:./logout.php');
+    exit();
+
+}
+
+
+// Students and Parents have view-only access to notices.
+if (
+    $_SESSION['role'] != 'Student' &&
+    $_SESSION['role'] != 'Parent'
+) {
+
+    http_response_code(403);
+    exit("Unauthorized access");
+
 }
 
 // CSRF: reject any POST without a valid token before any data is changed.

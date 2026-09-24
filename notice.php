@@ -2,10 +2,19 @@
 
 
 include_once 'database.php';
-if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
-  # code...
-  header('Location:./logout.php');
-  exit;
+if (!isset($_SESSION['user'])) {
+
+    header('Location:./logout.php');
+    exit();
+
+}
+
+// Only authorized Teachers can delete notices.
+if ($_SESSION['role'] != 'Teacher') {
+
+    http_response_code(403);
+    exit("Unauthorized access");
+
 }
 
 // CSRF: reject any POST without a valid token before any data is changed.
@@ -13,11 +22,25 @@ include_once 'csrf.php';
 verifyCSRFOnPost();
 
 // Delete is POST-only (token already verified above); GET ?delete= is ignored.
-if (isset($_POST['delete'])) {
-  $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
-  $stmt->bind_param("i", $_POST['delete']);
-  $stmt->execute();
-  $stmt->close();
+if (
+    // Only Teachers can manage and delete notices.
+
+    isset($_POST['delete']) &&
+    $_SESSION['role'] == 'Teacher'
+) {
+
+    $stmt = $conn->prepare(
+        "DELETE FROM notice WHERE id = ?"
+    );
+
+    $stmt->bind_param(
+        "i",
+        $_POST['delete']
+    );
+
+    $stmt->execute();
+
+    $stmt->close();
 }
 ?>
 <?php
