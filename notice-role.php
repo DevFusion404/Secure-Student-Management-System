@@ -2,11 +2,17 @@
 
 
 include_once 'database.php';
-if (!isset($_SESSION['user'])) {
 
+// Any delete attempt must fail with the forbidden response before the login
+// redirect can run. This prevents a 302 redirect from masking the block.
+if (isset($_GET['delete']) || isset($_POST['delete'])) {
+    http_response_code(403);
+    exit("Forbidden: notice deletion is not allowed via URL parameters.");
+}
+
+if (!isset($_SESSION['user'])) {
     header('Location:./logout.php');
     exit();
-
 }
 
 
