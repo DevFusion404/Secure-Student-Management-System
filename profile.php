@@ -65,12 +65,13 @@ if($_SESSION['role']=='Student'){
 
     try {
 
-      $sql = "UPDATE student set fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',parent=".$parent.",classroom='".$classroom."' where sid='".$sid."'";
+      $stmt = $conn->prepare("UPDATE student SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, parent = ?, classroom = ? WHERE sid = ?");
+      $stmt->bind_param("ssssssss", $fname, $lname, $dob, $address, $gender, $parent, $classroom, $sid);
 
 
                    // $sql = "INSERT INTO student (sid,fname,lname,bday,address,gender,parent,classroom) VALUES ('".$sid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$classroom."')";
 
-      if ($conn->query($sql) === TRUE) {
+      if ($stmt->execute()) {
        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
        x.style.display='block';</script>";
      } else {
@@ -87,8 +88,10 @@ if($_SESSION['role']=='Student'){
 
                 # code...
  } else {
-  $update = "SELECT * FROM student WHERE sid='".$sid."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM student WHERE sid = ?");
+  $stmt->bind_param("s", $sid);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -132,11 +135,12 @@ if($_SESSION['role']=='Student'){
     try {
 
 
-     $sql = "UPDATE parent SET fname='".$fname."',lname='".$lname."',address='".$address."',gender='".$gender."',job='".$job."',contact='".$contact."',nic='".$nic."' WHERE pid =".$pid;
+     $stmt = $conn->prepare("UPDATE parent SET fname = ?, lname = ?, address = ?, gender = ?, job = ?, contact = ?, nic = ? WHERE pid = ?");
+     $stmt->bind_param("ssssssss", $fname, $lname, $address, $gender, $job, $contact, $nic, $pid);
 
                    // $sql = "INSERT INTO Parent (fname,lname,address,gender,job,contact,nic,email) VALUES ( '".$fname."', '".$lname."','".$address."','".$gender."','".$job."','".$contact."','".$nic."','".$email."')";
 
-     if ($conn->query($sql) === TRUE) {
+     if ($stmt->execute()) {
        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
        x.style.display='block';</script>";
      } else {
@@ -153,8 +157,10 @@ if($_SESSION['role']=='Student'){
 
                 # code...
  } else {
-  $update = "SELECT * FROM parent WHERE pid='".$pid."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM parent WHERE pid = ?");
+  $stmt->bind_param("s", $pid);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -193,11 +199,12 @@ if($_SESSION['role']=='Student'){
 
     $contact = $_POST['contact'];
     try {
-     $sql = "UPDATE teacher SET fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',skill='".$skill."',contact='".$contact."' WHERE tid = '".$tid."'";
+     $stmt = $conn->prepare("UPDATE teacher SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, skill = ?, contact = ? WHERE tid = ?");
+     $stmt->bind_param("ssssssss", $fname, $lname, $dob, $address, $gender, $skill, $contact, $tid);
 
                    // $sql = "INSERT INTO Teacher (tid,fname,lname,bday,address,gender,skill,contact,email) VALUES ('".$tid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$skill."','".$contact."','".$email."')";
 
-     if ($conn->query($sql) === TRUE) {
+     if ($stmt->execute()) {
        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
        x.style.display='block';</script>";
      } else {
@@ -214,8 +221,10 @@ if($_SESSION['role']=='Student'){
 
                 # code...
  } else {
-  $update = "SELECT * FROM teacher WHERE tid='".$tid."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM teacher WHERE tid = ?");
+  $stmt->bind_param("s", $tid);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
