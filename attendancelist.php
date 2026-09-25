@@ -140,8 +140,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                   <?php
 
-                  $sql = "SELECT * from attendancereport where aid =".$_GET['aid'];
-                  $result = $conn->query($sql);
+                  $stmt = $conn->prepare("SELECT * FROM attendancereport WHERE aid = ?");
+                  $stmt->bind_param("s", $_GET['aid']);
+                  $stmt->execute();
+                  $result = $stmt->get_result();
 
                   if ($result->num_rows > 0) {
             echo ' <a  href="attendancelist.php?view='.$_GET['aid'].'&aid='.$_GET['aid'].'&date='.$_GET['date'].'&subject='.$_GET['subject'].'&stime='.$_GET['stime'].'"  class="btn btn-primary">View Attendance</a>';
@@ -169,9 +171,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                   try {
 
-                    $sql = "INSERT INTO attendance Report (`date`,sid) VALUES ('".$date."', '".$sid."')";
+                    $stmt = $conn->prepare("INSERT INTO attendance Report (`date`, sid) VALUES (?, ?)");
+                    $stmt->bind_param("ss", $date, $sid);
 
-                  if ($conn->query($sql) === TRUE) {
+                  if ($stmt->execute()) {
                          echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
 x.style.display='block';</script>";
                       } else {
@@ -224,8 +227,10 @@ x.style.display='block';</script>";
 
                   <?php
 
-                  $sql = "SELECT * from student where classroom='".$_GET['class']."'";
-                  $result = $conn->query($sql);
+                  $stmt = $conn->prepare("SELECT * FROM student WHERE classroom = ?");
+                  $stmt->bind_param("s", $_GET['class']);
+                  $stmt->execute();
+                  $result = $stmt->get_result();
 
                   if ($result->num_rows > 0) {
                     $x=0;
@@ -295,8 +300,10 @@ x.style.display='block';</script>";
 
                   <?php
 
-                  $sql = "SELECT * from attendancereport,student where aid='".$_GET['aid']."' and attendancereport.sid = student.sid";
-                  $result = $conn->query($sql);
+                  $stmt = $conn->prepare("SELECT * FROM attendancereport, student WHERE aid = ? AND attendancereport.sid = student.sid");
+                  $stmt->bind_param("s", $_GET['aid']);
+                  $stmt->execute();
+                  $result = $stmt->get_result();
 
                   if ($result->num_rows > 0) {
                     
