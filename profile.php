@@ -318,8 +318,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             <h4 class="text-right">Profile Settings</h4>
                           </div>
                           <div class="row mt-2">
-                            <div class="col-md-6"><label class="labels">First Name</label><input type="text" name="fname" class="form-control" placeholder="first name" value="<?php echo $fname;?>"></div>
-                            <div class="col-md-6"><label class="labels">Last Name</label><input type="text" name="lname" class="form-control" value="<?php echo $lname;?>" placeholder="surname"></div>
+                            <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                            <div class="col-md-6"><label class="labels">First Name</label><input type="text" name="fname" class="form-control" placeholder="first name" value="<?php echo xssEscape($fname); ?>"></div>
+                            <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                            <div class="col-md-6"><label class="labels">Last Name</label><input type="text" name="lname" class="form-control" value="<?php echo xssEscape($lname); ?>" placeholder="surname"></div>
                           </div>
                           <div class="row mt-3">
 
@@ -328,7 +330,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                              <div class="col-md-12">
                               <div class="form-group">
                                 <label for="exampleInputPassword1">Student ID</label>
-                                <input name="sid" type="text" class="form-control" id="exampleInputPassword1" readonly required value=<?php echo "'".$sid."'"; ?>>
+                                <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                                <input name="sid" type="text" class="form-control" id="exampleInputPassword1" readonly required value="<?php echo xssEscape($sid); ?>">
                               </div>
                             </div>
 
@@ -338,7 +341,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                 <label>Date of Birth</label>
 
                                 <div class="input-group date">
-                                  <input type="date" name='dob' class="form-control pull-right" id="datepicker" placeholder="Select Student's Data of Birth" value=<?php echo "'".$dob."'"; ?>>
+                                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                                  <input type="date" name='dob' class="form-control pull-right" id="datepicker" placeholder="Select Student's Data of Birth" value="<?php echo xssEscape($dob); ?>">
                                 </div>
                                 <!-- /.input group -->
 
@@ -362,7 +366,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             <div class="col-md-12">
                               <div class="form-group">
                                 <label for="exampleInputPassword1">Email</label>
-                                <input name="email" type="email" class="form-control" id="exampleInputPassword1"  disabled required value=<?php echo "'".$email."'"; ?>>
+                                <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                                <input name="email" type="email" class="form-control" id="exampleInputPassword1"  disabled required value="<?php echo xssEscape($email); ?>">
                               </div>
                             </div>
 
@@ -371,7 +376,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             <div class="col-md-12">
                               <div class="form-group">
                                 <label for="exampleFormControlTextarea1">Address</label>
-                                <textarea name="address" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo $address; ?></textarea>
+                                <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                                <textarea name="address" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo xssEscape($address); ?></textarea>
                               </div>
                             </div>
                             <div class="col-md-12">
@@ -384,7 +390,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                   if ($result->num_rows > 0) {
                    // output data of each row
                                    while($row = $result->fetch_assoc()) {
-                                    echo "<option "; if($classroom==$row["hno"]){echo 'selected="selected"';} echo " value='".$row["hno"]."' >".$row["title"]."_ID:".$row["hno"]."</option>";
+                                    // XSS: Escape dynamic database values before rendering them.
+                                    echo "<option "; if($classroom==$row["hno"]){echo 'selected="selected"';} echo " value='".xssEscape($row["hno"])."' >".xssEscape($row["title"])."_ID:".xssEscape($row["hno"])."</option>";
                                   }
                                 }
                                 ?>
@@ -410,7 +417,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                  while($row = $result->fetch_assoc()) {
 
 
-                                  echo "<option "; if($parent==$row["pid"]){echo 'selected="selected"';} echo " value='".$row["pid"]."' >".$row["fname"]." ".$row["lname"]." - ID:".$row["pid"]."</option>";
+                                  // XSS: Escape dynamic database values before rendering them.
+
+
+                                  // XSS: Escape dynamic values before rendering them in HTML.
+                                  echo "<option "; if($parent==$row["pid"]){echo 'selected="selected"';} echo " value='".xssEscape($row["pid"])."' >".xssEscape($row["fname"])." ".xssEscape($row["lname"])." - ID:".xssEscape($row["pid"])."</option>";
                                 }
                               }
 
@@ -428,7 +439,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleInputPassword1">National Identity Card</label>
-                            <input name="nic" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$nic."'"; ?>>
+                            <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                            <input name="nic" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($nic); ?>">
                           </div>
                         </div>
 
@@ -449,7 +461,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleInputPassword1">Email</label>
-                            <input name="email" type="email" class="form-control" id="exampleInputPassword1" disabled required value=<?php echo "'".$email."'"; ?>>
+                            <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                            <input name="email" type="email" class="form-control" id="exampleInputPassword1" disabled required value="<?php echo xssEscape($email); ?>">
                           </div>
                         </div>
 
@@ -457,21 +470,24 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleFormControlTextarea1">Address</label>
-                            <textarea name="address" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo $address; ?></textarea>
+                            <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                            <textarea name="address" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo xssEscape($address); ?></textarea>
                           </div>
                         </div>
 
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleInputPassword1">Contact</label>
-                            <input name="contact" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$contact."'"; ?>>
+                            <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                            <input name="contact" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($contact); ?>">
                           </div>
                         </div>
 
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleInputPassword1">Occupation</label>
-                            <input name="job" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$occupation."'"; ?>>
+                            <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                            <input name="job" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($occupation); ?>">
                           </div>
                         </div>
 
@@ -480,7 +496,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleInputPassword1">Teacher ID</label>
-                            <input name="tid" type="text" class="form-control" id="exampleInputPassword1" readonly required value=<?php echo "'".$tid."'"; ?>>
+                            <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                            <input name="tid" type="text" class="form-control" id="exampleInputPassword1" readonly required value="<?php echo xssEscape($tid); ?>">
                           </div>
                         </div>
 
@@ -490,7 +507,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             <label>Date of Birth</label>
 
                             <div class="input-group date">
-                              <input type="date" name='dob' class="form-control pull-right" id="datepicker" value=<?php echo "'".$dob."'"; ?>>
+                              <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                              <input type="date" name='dob' class="form-control pull-right" id="datepicker" value="<?php echo xssEscape($dob); ?>">
                             </div>
                             <!-- /.input group -->
 
@@ -513,7 +531,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleInputPassword1">Email</label>
-                            <input name="email" type="email" class="form-control" id="exampleInputPassword1" disabled=""> required value=<?php echo "'".$email."'"; ?>>
+                            <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                            <input name="email" type="email" class="form-control" id="exampleInputPassword1" disabled=""> required value="<?php echo xssEscape($email); ?>">
                           </div>
                         </div>
 
@@ -521,21 +540,24 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleFormControlTextarea1">Address</label>
-                            <textarea name="address" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo $address; ?></textarea>
+                            <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                            <textarea name="address" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo xssEscape($address); ?></textarea>
                           </div>
                         </div>
 
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleInputPassword1">Contact</label>
-                            <input name="contact" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$contact."'"; ?>>
+                            <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                            <input name="contact" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($contact); ?>">
                           </div>
                         </div>
 
                         <div class="col-md-12">
                           <div class="form-group">
                             <label for="exampleFormControlTextarea1">Skills</label>
-                            <textarea name="skill" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo $skill; ?></textarea>
+                            <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                            <textarea name="skill" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo xssEscape($skill); ?></textarea>
                           </div>
                         </div>
                       <?php } ?>
