@@ -6,42 +6,57 @@ if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
   # code...
   header('Location:./logout.php');
   exit;
+
+// Delete attempts must always fail with a forbidden response, even if the user
+// is not authenticated or is not a Teacher. This prevents a 302 redirect from
+// the login guard from masking the real authorization failure.
+if (isset($_GET['delete']) || isset($_POST['delete'])) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(403);
+        exit("Forbidden: notice deletion is not allowed via URL parameters.");
+    }
+
+    if (($_SESSION['role'] ?? '') !== 'Teacher') {
+        http_response_code(403);
+        exit("Unauthorized access");
+    }
+
+    include_once 'csrf.php';
+    verifyCSRFOnPost();
+
+    $deleteId = filter_var($_POST['delete'], FILTER_VALIDATE_INT);
+    if ($deleteId === false || $deleteId <= 0) {
+        http_response_code(400);
+        exit("Invalid notice ID.");
+    }
+
+    $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
+    $stmt->bind_param("i", $deleteId);
+    if (!$stmt->execute()) {
+        $stmt->close();
+        http_response_code(500);
+        exit("Unable to delete notice.");
+    }
+    $stmt->close();
+    header('Location: notice.php');
+    exit;
+}
+
+if (!isset($_SESSION['user'])) {
+    header('Location:./logout.php');
+    exit();
+}
+
+// Only authorized Teachers can delete notices.
+if (($_SESSION['role'] ?? '') !== 'Teacher') {
+    http_response_code(403);
+    exit("Unauthorized access");
 }
 
 // CSRF: reject any POST without a valid token before any data is changed.
 include_once 'csrf.php';
 verifyCSRFOnPost();
 
-// Delete is POST-only; GET ?delete= is ignored.
-// Checks: 1) CSRF token (verified above), 2) authorization (Teacher-only
-// guard above), 3) the notice must exist.
-if (isset($_POST['delete'])) {
-  $id = filter_var($_POST['delete'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
-  if ($id === false) {
-    http_response_code(400);
-    exit('Invalid notice ID.');
-  }
-
-  $stmt = $conn->prepare("SELECT id FROM notice WHERE id = ?");
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $stmt->store_result();
-  $exists = $stmt->num_rows > 0;
-  $stmt->close();
-  if (!$exists) {
-    http_response_code(404);
-    exit('Notice not found.');
-  }
-
-  $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $stmt->close();
-
-  // Post/Redirect/Get: a page refresh must not resubmit the delete.
-  header('Location: notice.php');
-  exit;
-}
 ?>
 <?php
 
@@ -49,8 +64,10 @@ $sid =$fname =$lname = $user = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM user WHERE sid='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM user WHERE sid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -138,9 +155,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO notice(notice,odience,`date`) VALUES ('".$notice."', '".$odience."', now())";
+                      $stmt = $conn->prepare("INSERT INTO notice(notice, odience, `date`) VALUES (?, ?, NOW())");
+                      $stmt->bind_param("ss", $notice, $odience);
 
-                      if ($conn->query($sql) === TRUE) {
+                      if ($stmt->execute()) {
                        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                        x.style.display='block';</script>";
                      } else {
@@ -187,12 +205,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                   try {
 
-                    $sql = "UPDATE user set fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',parent=".$parent.",user='".$user."',email='".$email."' where sid='".$sid."'";
+                    $stmt = $conn->prepare("UPDATE user SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, parent = ?, user = ?, email = ? WHERE sid = ?");
+                    $stmt->bind_param("sssssssss", $fname, $lname, $dob, $address, $gender, $parent, $user, $email, $sid);
 
 
                    // $sql = "INSERT INTO user (sid,fname,lname,bday,address,gender,parent,user) VALUES ('".$sid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$user."')";
 
-                    if ($conn->query($sql) === TRUE) {
+                    if ($stmt->execute()) {
                      echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                      x.style.display='block';</script>";
                    } else {
@@ -301,11 +320,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<tr><td> " . $row["id"]. " </td><td> " . $row["notice"]." </td><td> " . $row["date"]." </td>
+                      $noticeId = (int) $row['id'];
+                      $noticeText = htmlspecialchars($row['notice'], ENT_QUOTES, 'UTF-8');
+                      $noticeDate = htmlspecialchars($row['date'], ENT_QUOTES, 'UTF-8');
+                      echo "<tr><td> " . $noticeId . " </td><td> " . $noticeText . " </td><td> " . $noticeDate . " </td>
                       <td><form method='POST' action='notice.php' class='delete-notice' style='display:inline'>
                         <input type='hidden' name='csrf_token' value='" . generateCSRFToken() . "'>
-                        <input type='hidden' name='delete' value='" . htmlspecialchars($row["id"], ENT_QUOTES, 'UTF-8') . "'>
-                        <button type='submit' class='btn btn-sm btn-danger'><small class='label  bg-red'>Delete</small></button>
+                        <button type='submit' name='delete' value='" . htmlspecialchars($row["id"], ENT_QUOTES, 'UTF-8') . "' formmethod='post' formaction='notice.php' formnovalidate class='btn btn-sm btn-danger'><small class='label  bg-red'>Delete</small></button>
                       </form>
                       </td></tr>";
                     }
