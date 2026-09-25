@@ -1,4 +1,4 @@
-<?php session_start();
+<?php require_once 'security.php';
 
 
 include_once 'database.php';
@@ -117,8 +117,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                       $stmt->bind_param("ssssss", $subject, $teacher, $classroom, $day, $stime, $etime);
 
                       if ($stmt->execute()) {
-                       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                       x.style.display='block';</script>";
+                       echo "<span class='js-show-truemsg' hidden></span>";
                      } else {
                      }
 
@@ -171,8 +170,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // $sql = "INSERT INTO schedule (id,fname,lname,bday,address,gender,parent,schedule) VALUES ('".$id."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$schedule."')";
 
                     if ($stmt->execute()) {
-                     echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                     x.style.display='block';</script>";
+                     echo "<span class='js-show-truemsg' hidden></span>";
                    } else {
                    }
 
@@ -402,11 +400,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <?php include_once 'footer.php'; ?>
 
 
-<script type="text/javascript">
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-</script>
 
 </body>
 

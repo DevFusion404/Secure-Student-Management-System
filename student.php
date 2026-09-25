@@ -1,4 +1,4 @@
-<?php session_start();
+<?php require_once 'security.php';
 
 
 include_once 'database.php';
@@ -165,8 +165,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         $stmt = $conn->prepare("INSERT INTO student (sid, fname, lname, bday, address, gender, parent, classroom, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         $stmt->bind_param("sssssssss", $sid, $fname, $lname, $dob, $address, $gender, $parent, $classroom, $email);
                         if ($stmt->execute()) {
-                         echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                         x.style.display='block';</script>";
+                         echo "<span class='js-show-truemsg' hidden></span>";
                        } else {
                        }
                         if ($stmt->execute()) {
@@ -230,8 +229,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // $sql = "INSERT INTO student (sid,fname,lname,bday,address,gender,parent,classroom) VALUES ('".$sid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$classroom."')";
 
                       if ($stmt->execute()) {
-                       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                       x.style.display='block';</script>";
+                       echo "<span class='js-show-truemsg' hidden></span>";
                      } else {
                      }
 
