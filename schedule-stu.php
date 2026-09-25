@@ -1,4 +1,4 @@
-<?php session_start();
+<?php require_once 'security.php';
 
 
 include_once 'database.php';
@@ -33,7 +33,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 </head>
 
-<body class="nav-md">
+<body class="nav-md" data-active-menu="schedule-stu">
   <div class="container body">
     <div class="main_container">
       <div class="col-md-3 left_col">
@@ -155,41 +155,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <?php include_once 'footer.php'; ?>
 
 
-<script type="text/javascript">
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-  $(function () {
-    $('#example1').DataTable()
-    $('#example2').DataTable({
-      'paging'      : true,
-      'lengthChange': false,
-      'searching'   : false,
-      'ordering'    : true,
-      'info'        : true,
-      'autoWidth'   : false
-    })
-  });
-  $('.select2').select2();
-  $('#datepicker').datepicker({
-    autoclose: true
-  });
-
-
-
-  var r = document.getElementById("schedule-stu");
-  r.className += "active";
-
-
-
-  $('.timepicker').timepicker({
-    showInputs: false
-  })
-
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-</script>
 
 </body>
 

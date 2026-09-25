@@ -1,4 +1,4 @@
-<?php session_start(); 
+<?php require_once 'security.php'; 
 
 
 include_once 'database.php';
@@ -54,7 +54,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
 </head>
 
-<body class="hold-transition skin-green sidebar-mini">
+<body class="hold-transition skin-green sidebar-mini" data-active-menu="attendance">
 <div class="wrapper">
 
   <!-- Main Header -->
@@ -181,8 +181,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     $stmt->bind_param("ss", $date, $sid);
 
                   if ($stmt->execute()) {
-                         echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-x.style.display='block';</script>";
+                         echo "<span class='js-show-truemsg' hidden></span>";
                       } else {
                             }
                     
@@ -409,44 +408,8 @@ x.style.display='block';</script>";
 <script src="dist/js/adminlte.min.js"></script>
 <!-- AdminLTE for demo purposes -->
 <script src="dist/js/demo.js"></script>
-<!-- Page script -->
-
-<script>
-  $(function () {
-    $('#example1').DataTable()
-    $('#example2').DataTable({
-      'paging'      : true,
-      'lengthChange': false,
-      'searching'   : false,
-      'ordering'    : true,
-      'info'        : true,
-      'autoWidth'   : false
-    })
-  })
-</script>
-
-
-
-
-<script>   $('.select2').select2()
-  $('#datepicker').datepicker({
-      autoclose: true
-    });
-
-
-        
-            var r = document.getElementById("attendance"); 
-            r.className += "active"; 
-
-
-
-            $('.timepicker').timepicker({
-      showInputs: false
-    })
-           
-    </script> 
-
-
+<!-- Page behaviour (replaces inline scripts; required by the CSP) -->
+<script src="assets/js/app.js"></script>
 
 <!-- Optionally, you can add Slimscroll and FastClick plugins.
      Both of these plugins are recommended to enhance the
@@ -470,8 +433,7 @@ if(isset($_POST['submitatt']))
         $attendance->bind_param("iss", $aid,$sid, $att);
         $attendance->execute();
 
-         echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-x.style.display='block';</script>";
+         echo "<span class='js-show-truemsg' hidden></span>";
     }
      
     if ($conn->affected_rows>0) {

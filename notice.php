@@ -2,6 +2,10 @@
 
 
 include_once 'database.php';
+if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
+  # code...
+  header('Location:./logout.php');
+  exit;
 
 // Delete attempts must always fail with a forbidden response, even if the user
 // is not authenticated or is not a Teacher. This prevents a 302 redirect from
