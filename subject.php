@@ -170,12 +170,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Subject ID</label>
-                  <input name="sid" type="text" class="form-control required" id="exampleInputPassword1"  required value=<?php echo "'".$sid."'"; ?> <?php if(isset($_GET['update'])):?>disabled<?php endif; ?>>
+                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                  <input name="sid" type="text" class="form-control required" id="exampleInputPassword1"  required value="<?php echo xssEscape($sid); ?>" <?php if(isset($_GET['update'])):?>disabled<?php endif; ?>>
                 </div>
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Subject Title</label>
-                  <input name="title" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$title."'"; ?>>
+                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                  <input name="title" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($title); ?>">
                 </div>
 
 
@@ -185,7 +187,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <div class="form-group">
                   <label for="exampleFormControlTextarea1">Syllubus Details</label>
-                  <textarea name="description" class="form-control" id="exampleFormControlTextarea1" rows="10"><?php echo $description; ?></textarea>
+                  <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                  <textarea name="description" class="form-control" id="exampleFormControlTextarea1" rows="10"><?php echo xssEscape($description); ?></textarea>
                 </div>
 
 
@@ -255,7 +258,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // output data of each row
                        while($row = $result->fetch_assoc()) {
                         $class = (isset($_GET['update']) && $_GET['update'] == $row["sid"])?'subject':'';
-                        echo "<tr class='{$class}'><td> " . $row["sid"]. " </td><td> " . $row["title"]. "</td><td>" . $row["description"]. "</td><td><a href='subject.php?update=". $row["sid"]."'><small class='btn btn-sm btn-primary'>Update</small></a></td></tr>";
+                        // XSS: Escape dynamic database values before rendering them.
+                        echo "<tr class='{$class}'><td> " . xssEscape($row["sid"]). " </td><td> " . xssEscape($row["title"]). "</td><td>" . xssEscape($row["description"]). "</td><td><a href='subject.php?update=". xssEscape($row["sid"])."'><small class='btn btn-sm btn-primary'>Update</small></a></td></tr>";
                       }
                     }
 
