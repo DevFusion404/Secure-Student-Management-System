@@ -3,10 +3,6 @@
 
 include_once 'database.php';
 
-  $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
-  $stmt->bind_param("s", $_GET['delete']);
-  $stmt->execute();
-   # code...
 // Delete attempts must always fail with a forbidden response, even if the user
 // is not authenticated or is not a Teacher. This prevents a 302 redirect from
 // the login guard from masking the real authorization failure.
@@ -32,8 +28,14 @@ if (isset($_GET['delete']) || isset($_POST['delete'])) {
 
     $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
     $stmt->bind_param("i", $deleteId);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        $stmt->close();
+        http_response_code(500);
+        exit("Unable to delete notice.");
+    }
     $stmt->close();
+    header('Location: notice.php');
+    exit;
 }
 
 if (!isset($_SESSION['user'])) {
@@ -51,36 +53,6 @@ if (($_SESSION['role'] ?? '') !== 'Teacher') {
 include_once 'csrf.php';
 verifyCSRFOnPost();
 
-// Delete is POST-only; GET ?delete= is ignored.
-// Checks: 1) CSRF token (verified above), 2) authorization (Teacher-only
-// guard above), 3) the notice must exist.
-if (isset($_POST['delete'])) {
-  $id = filter_var($_POST['delete'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
-  if ($id === false) {
-    http_response_code(400);
-    exit('Invalid notice ID.');
-  }
-
-  $stmt = $conn->prepare("SELECT id FROM notice WHERE id = ?");
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $stmt->store_result();
-  $exists = $stmt->num_rows > 0;
-  $stmt->close();
-  if (!$exists) {
-    http_response_code(404);
-    exit('Notice not found.');
-  }
-
-  $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $stmt->close();
-
-  // Post/Redirect/Get: a page refresh must not resubmit the delete.
-  header('Location: notice.php');
-  exit;
-}
 ?>
 <?php
 
@@ -344,11 +316,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<tr><td> " . $row["id"]. " </td><td> " . $row["notice"]." </td><td> " . $row["date"]." </td>
+                      $noticeId = (int) $row['id'];
+                      $noticeText = htmlspecialchars($row['notice'], ENT_QUOTES, 'UTF-8');
+                      $noticeDate = htmlspecialchars($row['date'], ENT_QUOTES, 'UTF-8');
+                      echo "<tr><td> " . $noticeId . " </td><td> " . $noticeText . " </td><td> " . $noticeDate . " </td>
                       <td><form method='POST' action='notice.php' class='delete-notice' style='display:inline'>
                         <input type='hidden' name='csrf_token' value='" . generateCSRFToken() . "'>
-                        <input type='hidden' name='delete' value='" . htmlspecialchars($row["id"], ENT_QUOTES, 'UTF-8') . "'>
-                        <button type='submit' class='btn btn-sm btn-danger'><small class='label  bg-red'>Delete</small></button>
+                        <button type='submit' name='delete' value='" . htmlspecialchars($row["id"], ENT_QUOTES, 'UTF-8') . "' formmethod='post' formaction='notice.php' formnovalidate class='btn btn-sm btn-danger'><small class='label  bg-red'>Delete</small></button>
                       </form>
                       </td></tr>";
                     }

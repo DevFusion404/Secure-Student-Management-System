@@ -42,19 +42,12 @@ if (isset($_POST['delete'])) {
 
   $stmt = $conn->prepare("DELETE FROM user WHERE email = ?");
   $stmt->bind_param("s", $email);
-  $stmt->execute();
+  if (!$stmt->execute()) {
+    $stmt->close();
+    http_response_code(500);
+    exit('Unable to delete user.');
+  }
   $stmt->close();
-if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
-  # code...
-  header('Location:./logout.php');
-}
-if (isset($_GET['delete'])) {
-
-  $stmt = $conn->prepare("DELETE FROM user WHERE email = ?");
-  $stmt->bind_param("s", $_GET['delete']);
-  $stmt->execute();
-   # code...
-
   // Post/Redirect/Get: a page refresh must not resubmit the delete.
   header('Location: user.php');
   exit;
@@ -376,8 +369,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         echo "<tr><td> " . $row["email"]. " </td><td> " . $row["role"]." </td>
                         <td><form method='POST' action='user.php' class='delete-user' style='display:inline'>
                           <input type='hidden' name='csrf_token' value='" . generateCSRFToken() . "'>
-                          <input type='hidden' name='delete' value='" . htmlspecialchars($row["email"], ENT_QUOTES, 'UTF-8') . "'>
-                          <button type='submit' class='btn btn-sm btn-primary'><small>Delete</small></button>
+                          <button type='submit' name='delete' value='" . htmlspecialchars($row["email"], ENT_QUOTES, 'UTF-8') . "' formmethod='post' formaction='user.php' formnovalidate class='btn btn-sm btn-primary'><small>Delete</small></button>
                         </form><br><a href='user.php?email=". $row["email"]."' class='update-user'><small class='btn btn-sm btn-danger'>Update</small></a>
                         </td></tr>";
                       }

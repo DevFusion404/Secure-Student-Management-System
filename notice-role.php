@@ -114,7 +114,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         if ($result->num_rows > 0) {
                    // output data of each row
                          while($row = $result->fetch_assoc()) {
-                          echo "<tr><td> " . $row["id"]. " </td><td> " . $row["notice"]." </td><td> " . $row["date"]." </td>
+                          $noticeId = (int) $row['id'];
+                          $noticeText = htmlspecialchars($row['notice'], ENT_QUOTES, 'UTF-8');
+                          $noticeDate = htmlspecialchars($row['date'], ENT_QUOTES, 'UTF-8');
+                          echo "<tr><td> " . $noticeId . " </td><td> " . $noticeText . " </td><td> " . $noticeDate . " </td>
                           </tr>";
                         }
                       }
