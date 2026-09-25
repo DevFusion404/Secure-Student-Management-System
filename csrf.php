@@ -8,9 +8,8 @@
  * check does not leak timing information.
  */
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-  session_start();
-}
+// Ensure a hardened session exists (no-op if the page already loaded it).
+require_once __DIR__ . '/security.php';
 
 /**
  * Return the current session's CSRF token, creating it on first use.

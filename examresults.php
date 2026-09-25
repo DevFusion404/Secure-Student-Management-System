@@ -1,4 +1,4 @@
-<?php session_start();
+<?php require_once 'security.php';
 
 
 include_once 'database.php';
@@ -108,8 +108,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                       $sql = "INSERT INTO examresult(exam,student,marks,grade) VALUES (".$exam.", '".$student."', ".$marks.",'".$grade."')";
 
                       if ($conn->query($sql) === TRUE) {
-                       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                       x.style.display='block';</script>";
+                       echo "<span class='js-show-truemsg' hidden></span>";
                      } else {
                      }
 
@@ -159,8 +158,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     $sql = "INSERT INTO examresult(exam,student,marks,grade) VALUES (".$exam.", '".$student."', ".$marks.",'".$grade."')";
 
                     if ($conn->query($sql) === TRUE) {
-                     echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                     x.style.display='block';</script>";
+                     echo "<span class='js-show-truemsg' hidden></span>";
                    } else {
                    }
 

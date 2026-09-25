@@ -1,4 +1,4 @@
-<?php session_start();
+<?php require_once 'security.php';
 
 
 include_once 'database.php';
@@ -148,8 +148,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         $sql = "UPDATE user set password='".$password."',role='".$role."' where email='".$email."'";
 
                         if ($conn->query($sql) === TRUE) {
-                         echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                         x.style.display='block';</script>";
+                         echo "<span class='js-show-truemsg' hidden></span>";
                        } else {
                        }
 
@@ -166,8 +165,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                       $sql = "INSERT INTO user(email,password,role) VALUES ('".$email."', '".$password."', '".$role."')";
 
                       if ($conn->query($sql) === TRUE) {
-                       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                       x.style.display='block';</script>";
+                       echo "<span class='js-show-truemsg' hidden></span>";
                      } else {
                      }
 
@@ -215,8 +213,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // $sql = "INSERT INTO user (sid,fname,lname,bday,address,gender,parent,user) VALUES ('".$sid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$user."')";
 
                   if ($conn->query($sql) === TRUE) {
-                   echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                   x.style.display='block';</script>";
+                   echo "<span class='js-show-truemsg' hidden></span>";
                  } else {
                  }
 
@@ -390,15 +387,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <?php include_once 'footer.php'; ?>
 
 
-<script type="text/javascript">
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-
-  $('form.delete-user').submit(function(){
-    return confirm("Are you sure you want to delete?");
-  });
-</script>
 
 </body>
 

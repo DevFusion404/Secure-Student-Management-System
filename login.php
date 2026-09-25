@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'security.php';
 include_once 'database.php';
 
 // CSRF: the login form carries a token too, preventing login CSRF.

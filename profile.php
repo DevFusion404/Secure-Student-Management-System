@@ -1,4 +1,4 @@
-<?php session_start();
+<?php require_once 'security.php';
 
 
 include_once 'database.php';
@@ -71,8 +71,7 @@ if($_SESSION['role']=='Student'){
                    // $sql = "INSERT INTO student (sid,fname,lname,bday,address,gender,parent,classroom) VALUES ('".$sid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$classroom."')";
 
       if ($conn->query($sql) === TRUE) {
-       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-       x.style.display='block';</script>";
+       echo "<span class='js-show-truemsg' hidden></span>";
      } else {
      }
 
@@ -137,8 +136,7 @@ if($_SESSION['role']=='Student'){
                    // $sql = "INSERT INTO Parent (fname,lname,address,gender,job,contact,nic,email) VALUES ( '".$fname."', '".$lname."','".$address."','".$gender."','".$job."','".$contact."','".$nic."','".$email."')";
 
      if ($conn->query($sql) === TRUE) {
-       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-       x.style.display='block';</script>";
+       echo "<span class='js-show-truemsg' hidden></span>";
      } else {
      }
 
@@ -198,8 +196,7 @@ if($_SESSION['role']=='Student'){
                    // $sql = "INSERT INTO Teacher (tid,fname,lname,bday,address,gender,skill,contact,email) VALUES ('".$tid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$skill."','".$contact."','".$email."')";
 
      if ($conn->query($sql) === TRUE) {
-       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-       x.style.display='block';</script>";
+       echo "<span class='js-show-truemsg' hidden></span>";
      } else {
      }
 
@@ -573,11 +570,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <?php include_once 'footer.php'; ?>
 
 
-<script type="text/javascript">
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-</script>
 
 </body>
 
