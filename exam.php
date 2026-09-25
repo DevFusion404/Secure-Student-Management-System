@@ -13,8 +13,10 @@ $id =$fname =$lname = $classroom = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM exam WHERE id='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM exam WHERE id = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -103,9 +105,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO exam(subject,teacher,classroom,`date`,stime,etime) VALUES ('".$subject."', '".$teacher."', '".$classroom."','".$date."','".$stime."','".$etime."')";
+                      $stmt = $conn->prepare("INSERT INTO exam(subject, teacher, classroom, `date`, stime, etime) VALUES (?, ?, ?, ?, ?, ?)");
+                      $stmt->bind_param("ssssss", $subject, $teacher, $classroom, $date, $stime, $etime);
 
-                      if ($conn->query($sql) === TRUE) {
+                      if ($stmt->execute()) {
                        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                        x.style.display='block';</script>";
                      } else {
@@ -152,11 +155,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   try {
 
 
-                    $sql = "UPDATE exam SET fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',skill='".$skill."',contact='".$contact."',email='".$email."' WHERE id = '".$id."'";
+                    $stmt = $conn->prepare("UPDATE exam SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, skill = ?, contact = ?, email = ? WHERE id = ?");
+                    $stmt->bind_param("sssssssss", $fname, $lname, $dob, $address, $gender, $skill, $contact, $email, $id);
 
                    // $sql = "INSERT INTO Exam (id,fname,lname,bday,address,gender,skill,contact,email) VALUES ('".$id."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$skill."','".$contact."','".$email."')";
 
-                    if ($conn->query($sql) === TRUE) {
+                    if ($stmt->execute()) {
                      echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                      x.style.display='block';</script>";
                    } else {

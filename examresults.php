@@ -13,8 +13,10 @@ $id =$fname =$lname = $classroom = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM examresult WHERE exam='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM examresult WHERE exam = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -100,9 +102,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO examresult(exam,student,marks,grade) VALUES (".$exam.", '".$student."', ".$marks.",'".$grade."')";
+                      $stmt = $conn->prepare("INSERT INTO examresult(exam, student, marks, grade) VALUES (?, ?, ?, ?)");
+                      $stmt->bind_param("ssss", $exam, $student, $marks, $grade);
 
-                      if ($conn->query($sql) === TRUE) {
+                      if ($stmt->execute()) {
                        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                        x.style.display='block';</script>";
                      } else {
@@ -151,9 +154,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                    $sql = "INSERT INTO examresult(exam,student,marks,grade) VALUES (".$exam.", '".$student."', ".$marks.",'".$grade."')";
+                    $stmt = $conn->prepare("INSERT INTO examresult(exam, student, marks, grade) VALUES (?, ?, ?, ?)");
+                    $stmt->bind_param("ssss", $exam, $student, $marks, $grade);
 
-                    if ($conn->query($sql) === TRUE) {
+                    if ($stmt->execute()) {
                      echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                      x.style.display='block';</script>";
                    } else {
