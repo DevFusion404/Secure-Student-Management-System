@@ -2,17 +2,54 @@
 
 
 include_once 'database.php';
-if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
-  # code...
-  header('Location:./logout.php');
-}
-if (isset($_GET['delete'])) {
 
   $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
   $stmt->bind_param("s", $_GET['delete']);
   $stmt->execute();
    # code...
+// Delete attempts must always fail with a forbidden response, even if the user
+// is not authenticated or is not a Teacher. This prevents a 302 redirect from
+// the login guard from masking the real authorization failure.
+if (isset($_GET['delete']) || isset($_POST['delete'])) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(403);
+        exit("Forbidden: notice deletion is not allowed via URL parameters.");
+    }
+
+    if (($_SESSION['role'] ?? '') !== 'Teacher') {
+        http_response_code(403);
+        exit("Unauthorized access");
+    }
+
+    include_once 'csrf.php';
+    verifyCSRFOnPost();
+
+    $deleteId = filter_var($_POST['delete'], FILTER_VALIDATE_INT);
+    if ($deleteId === false || $deleteId <= 0) {
+        http_response_code(400);
+        exit("Invalid notice ID.");
+    }
+
+    $stmt = $conn->prepare("DELETE FROM notice WHERE id = ?");
+    $stmt->bind_param("i", $deleteId);
+    $stmt->execute();
+    $stmt->close();
 }
+
+if (!isset($_SESSION['user'])) {
+    header('Location:./logout.php');
+    exit();
+}
+
+// Only authorized Teachers can delete notices.
+if (($_SESSION['role'] ?? '') !== 'Teacher') {
+    http_response_code(403);
+    exit("Unauthorized access");
+}
+
+// CSRF: reject any POST without a valid token before any data is changed.
+include_once 'csrf.php';
+verifyCSRFOnPost();
 ?>
 <?php
 
@@ -189,6 +226,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
              ?>
 
              <form role="form" method="POST" >
+               <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
               <div class="box-body">
 
 
@@ -276,7 +314,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
                       echo "<tr><td> " . $row["id"]. " </td><td> " . $row["notice"]." </td><td> " . $row["date"]." </td>
-                      <td><a href='notice.php?delete=". $row["id"]."' class='btn btn-sm btn-danger  delete-notice'><small class='label  bg-red'>Delete</small></a>
+                      <td><form method='POST' action='notice.php' class='delete-notice' style='display:inline'>
+                        <input type='hidden' name='csrf_token' value='" . generateCSRFToken() . "'>
+                        <input type='hidden' name='delete' value='" . htmlspecialchars($row["id"], ENT_QUOTES, 'UTF-8') . "'>
+                        <button type='submit' class='btn btn-sm btn-danger'><small class='label  bg-red'>Delete</small></button>
+                      </form>
                       </td></tr>";
                     }
                   }
@@ -318,7 +360,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
     format: 'hh:mm A'
   });
 
-  $('a.delete-notice').click(function(){
+  $('form.delete-notice').submit(function(){
     return confirm("Are you sure you want to delete?");
   });
 </script>

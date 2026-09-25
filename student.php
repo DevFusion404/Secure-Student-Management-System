@@ -11,7 +11,6 @@ if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
 // CSRF: reject any POST without a valid token before any data is changed.
 include_once 'csrf.php';
 verifyCSRFOnPost();
-
 ?>
 <?php
 
@@ -62,6 +61,10 @@ function studentValidateInput($sid, $fname, $lname, $email, $classroom, $dob, $g
 
 
 if(isset($_GET['update'])){
+  $stmt = $conn->prepare("SELECT * FROM student WHERE sid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
   if (!is_string($_GET['update'])) {
     studentRejectInvalidInput(400);
   }
@@ -161,7 +164,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                         $stmt = $conn->prepare("INSERT INTO student (sid, fname, lname, bday, address, gender, parent, classroom, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         $stmt->bind_param("sssssssss", $sid, $fname, $lname, $dob, $address, $gender, $parent, $classroom, $email);
+                        $stmt = $conn->prepare("INSERT INTO student (sid, fname, lname, bday, address, gender, parent, classroom, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $stmt->bind_param("sssssssss", $sid, $fname, $lname, $dob, $address, $gender, $parent, $classroom, $email);
 
+                        if ($stmt->execute()) {
+                         echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
+                         x.style.display='block';</script>";
+                       } else {
+                       }
                         if ($stmt->execute()) {
                           $studentMessage = 'Student created successfully.';
                           $studentMessageType = 'success';
@@ -251,7 +261,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <?php } ?>
 
 
-                <form role="form" method="POST" >
+               <form role="form" method="POST" >
                  <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                 <div class="box-body">
 
