@@ -200,7 +200,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<option value='".$row["sid"]."' >".$row["title"]."_ID:".$row["sid"]."</option>";
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<option value='".xssEscape($row["sid"])."' >".xssEscape($row["title"])."_ID:".xssEscape($row["sid"])."</option>";
                     }
                   }
                   ?>
@@ -219,7 +220,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   if ($result->num_rows > 0) {
                    // output data of each row
                    while($row = $result->fetch_assoc()) {
-                    echo "<option value='".$row["hno"]."' >".$row["title"]."_ID:".$row["hno"]."</option>";
+                    // XSS: Escape dynamic database values before rendering them.
+                    echo "<option value='".xssEscape($row["hno"])."' >".xssEscape($row["title"])."_ID:".xssEscape($row["hno"])."</option>";
                   }
                 }
                 ?>
@@ -235,7 +237,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 if ($result->num_rows > 0) {
                    // output data of each row
                  while($row = $result->fetch_assoc()) {
-                  echo "<option value='".$row["tid"]."' >".$row["fname"]." ".$row["lname"]."_ID:".$row["tid"]."</option>";
+                  // XSS: Escape dynamic database values before rendering them.
+                  echo "<option value='".xssEscape($row["tid"])."' >".xssEscape($row["fname"])." ".xssEscape($row["lname"])."_ID:".xssEscape($row["tid"])."</option>";
                 }
               }
               ?>
@@ -368,7 +371,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                if ($result->num_rows > 0) {
                    // output data of each row
                  while($row = $result->fetch_assoc()) {
-                  echo "<tr><td> " . $row["id"]. " </td><td> " . $row["subject"]." </td><td> " . $row["teacher"]." </td><td> " . $row["classroom"]. "</td><td>" . $row["date"]. "</td><td>" . $row["stime"]. "</td><td>" . $row["etime"]. "</td></tr>";
+                  // XSS: Escape dynamic database values before rendering them.
+                  echo "<tr><td> " . xssEscape($row["id"]). " </td><td> " . xssEscape($row["subject"])." </td><td> " . xssEscape($row["teacher"])." </td><td> " . xssEscape($row["classroom"]). "</td><td>" . xssEscape($row["date"]). "</td><td>" . xssEscape($row["stime"]). "</td><td>" . xssEscape($row["etime"]). "</td></tr>";
                 }
               }
 

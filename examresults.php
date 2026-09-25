@@ -197,7 +197,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<option value='".$row["id"]."' >".$row["subject"]." - ID:".$row["id"]." - Date:".$row["date"]."</option>";
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<option value='".xssEscape($row["id"])."' >".xssEscape($row["subject"])." - ID:".xssEscape($row["id"])." - Date:".xssEscape($row["date"])."</option>";
                     }
                   }
                   ?>
@@ -216,7 +217,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   if ($result->num_rows > 0) {
                    // output data of each row
                    while($row = $result->fetch_assoc()) {
-                    echo "<option value='".$row["sid"]."' >".$row["fname"]." ".$row["lname"]." -ID:".$row["sid"]."</option>";
+                    // XSS: Escape dynamic database values before rendering them.
+                    echo "<option value='".xssEscape($row["sid"])."' >".xssEscape($row["fname"])." ".xssEscape($row["lname"])." -ID:".xssEscape($row["sid"])."</option>";
                   }
                 }
                 ?>
@@ -311,7 +313,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 if ($result->num_rows > 0) {
                    // output data of each row
                  while($row = $result->fetch_assoc()) {
-                  echo "<tr><td> " . $row["exam"]. " </td><td> " . $row["student"]." </td><td> " . $row["marks"]." </td><td> " . $row["grade"]. "</td></tr>";
+                  // XSS: Escape dynamic database values before rendering them.
+                  echo "<tr><td> " . xssEscape($row["exam"]). " </td><td> " . xssEscape($row["student"])." </td><td> " . xssEscape($row["marks"])." </td><td> " . xssEscape($row["grade"]). "</td></tr>";
                 }
               }
 
