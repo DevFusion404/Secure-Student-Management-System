@@ -11,6 +11,10 @@ if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
 // CSRF: reject any POST without a valid token before any data is changed.
 include_once 'csrf.php';
 verifyCSRFOnPost();
+
+function scheduleHtml($value) {
+  return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}
 ?>
 <?php
 
@@ -202,7 +206,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<option value='".$row["sid"]."' >".$row["title"]."_ID:".$row["sid"]."</option>";
+                       echo "<option value='" . scheduleHtml($row["sid"]) . "'>" . scheduleHtml($row["title"]) . "_ID:" . scheduleHtml($row["sid"]) . "</option>";
                     }
                   }
                   ?>
@@ -218,7 +222,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   if ($result->num_rows > 0) {
                    // output data of each row
                    while($row = $result->fetch_assoc()) {
-                    echo "<option value='".$row["tid"]."' >".$row["fname"]." ".$row["lname"]."_ID:".$row["tid"]."</option>";
+                     echo "<option value='" . scheduleHtml($row["tid"]) . "'>" . scheduleHtml($row["fname"]) . " " . scheduleHtml($row["lname"]) . "_ID:" . scheduleHtml($row["tid"]) . "</option>";
                   }
                 }
                 ?>
@@ -235,7 +239,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 if ($result->num_rows > 0) {
                    // output data of each row
                  while($row = $result->fetch_assoc()) {
-                  echo "<option value='".$row["hno"]."' >".$row["title"]."_ID:".$row["hno"]."</option>";
+                   echo "<option value='" . scheduleHtml($row["hno"]) . "'>" . scheduleHtml($row["title"]) . "_ID:" . scheduleHtml($row["hno"]) . "</option>";
                 }
               }
               ?>
@@ -363,7 +367,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // output data of each row
                  while($row = $result->fetch_assoc()) {
                   $class = (isset($_GET['update']) && $_GET['update'] == $row["id"])?'parent':'';
-                  echo "<tr class='{$class}'><td> " . $row["id"]. " </td><td> " . $row["subject"]." </td><td> " . $row["teacher"]." </td><td> " . $row["class"]. "</td><td>" . $row["day"]. "</td><td>" . $row["stime"]. "</td><td>" . $row["etime"]. "</td></tr>";
+                   echo "<tr class='{$class}'><td> " . scheduleHtml($row["id"]) . " </td><td> " . scheduleHtml($row["subject"]) . " </td><td> " . scheduleHtml($row["teacher"]) . " </td><td> " . scheduleHtml($row["class"]) . "</td><td>" . scheduleHtml($row["day"]) . "</td><td>" . scheduleHtml($row["stime"]) . "</td><td>" . scheduleHtml($row["etime"]) . "</td></tr>";
                 }
               }
 

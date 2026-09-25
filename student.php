@@ -164,9 +164,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                         $stmt = $conn->prepare("INSERT INTO student (sid, fname, lname, bday, address, gender, parent, classroom, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         $stmt->bind_param("sssssssss", $sid, $fname, $lname, $dob, $address, $gender, $parent, $classroom, $email);
-                        $stmt = $conn->prepare("INSERT INTO student (sid, fname, lname, bday, address, gender, parent, classroom, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                        $stmt->bind_param("sssssssss", $sid, $fname, $lname, $dob, $address, $gender, $parent, $classroom, $email);
-
                         if ($stmt->execute()) {
                          echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                          x.style.display='block';</script>";
