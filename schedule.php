@@ -13,8 +13,10 @@ $id =$fname =$lname = $schedule = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM schedule WHERE id='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM schedule WHERE id = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -102,9 +104,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO schedule (subject,teacher,class,day,stime,etime) VALUES ('".$subject."', '".$teacher."', '".$classroom."','".$day."','".$stime."','".$etime."')";
+                      $stmt = $conn->prepare("INSERT INTO schedule (subject, teacher, class, day, stime, etime) VALUES (?, ?, ?, ?, ?, ?)");
+                      $stmt->bind_param("ssssss", $subject, $teacher, $classroom, $day, $stime, $etime);
 
-                      if ($conn->query($sql) === TRUE) {
+                      if ($stmt->execute()) {
                        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                        x.style.display='block';</script>";
                      } else {
@@ -152,12 +155,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                   try {
 
-                    $sql = "UPDATE schedule set fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',parent=".$parent.",schedule='".$schedule."',email='".$email."' where id='".$id."'";
+                    $stmt = $conn->prepare("UPDATE schedule SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, parent = ?, schedule = ?, email = ? WHERE id = ?");
+                    $stmt->bind_param("sssssssss", $fname, $lname, $dob, $address, $gender, $parent, $schedule, $email, $id);
 
 
                    // $sql = "INSERT INTO schedule (id,fname,lname,bday,address,gender,parent,schedule) VALUES ('".$id."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$schedule."')";
 
-                    if ($conn->query($sql) === TRUE) {
+                    if ($stmt->execute()) {
                      echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                      x.style.display='block';</script>";
                    } else {

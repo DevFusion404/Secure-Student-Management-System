@@ -5,16 +5,70 @@ include_once 'database.php';
 if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
   # code...
   header('Location:./logout.php');
+  exit;
 }
+
+// CSRF: reject any POST without a valid token before any data is changed.
+include_once 'csrf.php';
+verifyCSRFOnPost();
+
 ?>
 <?php
 
 $sid =$fname =$lname = $classroom = $dob = $gender = $address = $parent=" ";
+$email = '';
+$studentMessage = '';
+$studentMessageType = '';
+
+function studentHtml($value) {
+  return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
+
+function studentRejectInvalidInput($statusCode = 422) {
+  http_response_code($statusCode);
+  exit('Invalid student form input.');
+}
+
+function studentPostValue($name) {
+  if (!isset($_POST[$name]) || !is_string($_POST[$name])) {
+    studentRejectInvalidInput();
+  }
+  return trim($_POST[$name]);
+}
+
+function studentDateValue($value) {
+  $date = DateTime::createFromFormat('!Y-m-d', $value);
+  $errors = DateTime::getLastErrors();
+  if ($date === false || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
+    studentRejectInvalidInput();
+  }
+  return $date->format('Y-m-d');
+}
+
+function studentValidateInput($sid, $fname, $lname, $email, $classroom, $dob, $gender, $address, $parent, $validateSid = true) {
+  if (($validateSid && (strlen($sid) === 0 || strlen($sid) > 25))
+      || strlen($fname) === 0 || strlen($fname) > 50
+      || strlen($lname) === 0 || strlen($lname) > 50
+      || !filter_var($email, FILTER_VALIDATE_EMAIL)
+      || strlen($email) > 50
+      || strlen($classroom) === 0 || strlen($classroom) > 25
+      || !preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $dob)
+      || !in_array($gender, array('Male', 'Female'), true)
+      || strlen($address) > 250
+      || !ctype_digit($parent)) {
+    studentRejectInvalidInput();
+  }
+}
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM student WHERE sid='".$_GET['update']."'";
-  $result = $conn->query($update);
+  if (!is_string($_GET['update'])) {
+    studentRejectInvalidInput(400);
+  }
+  $stmt = $conn->prepare("SELECT * FROM student WHERE sid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -82,19 +136,19 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <?php if (!isset($_GET['update'])) {
                   if (isset($_POST['submit'])) {
-                    $sid = $_POST['sid'];
-                    $fname = $_POST['fname'];
-                    $lname = $_POST['lname'];
-                    $email = $_POST['email'];
-                    $classroom = $_POST['classroom'];
-
-                    $dob = date_format(new DateTime($_POST['dob']),'Y-m-d');
-                //echo $dob;
-                    $gender = $_POST['gender'];
-                    $address = $_POST['address'];
-                    $parent=" ";
-                    if(isset($_POST['parent'])){
-                      $parent = $_POST['parent'];}
+                    if (studentPostValue('submit') !== 'submit') {
+                      studentRejectInvalidInput();
+                    }
+                    $sid = studentPostValue('sid');
+                    $fname = studentPostValue('fname');
+                    $lname = studentPostValue('lname');
+                    $email = studentPostValue('email');
+                    $classroom = studentPostValue('classroom');
+                    $dob = studentDateValue(studentPostValue('dob'));
+                    $gender = studentPostValue('gender');
+                    $address = studentPostValue('address');
+                    $parent = isset($_POST['parent']) ? studentPostValue('parent') : '0';
+                    studentValidateInput($sid, $fname, $lname, $email, $classroom, $dob, $gender, $address, $parent);
 
 
 
@@ -105,16 +159,20 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                        $sql = "INSERT INTO student (sid,fname,lname,bday,address,gender,parent,classroom,email) VALUES ('".$sid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$classroom."','".$email."')";
+                        $stmt = $conn->prepare("INSERT INTO student (sid, fname, lname, bday, address, gender, parent, classroom, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $stmt->bind_param("sssssssss", $sid, $fname, $lname, $dob, $address, $gender, $parent, $classroom, $email);
 
-                        if ($conn->query($sql) === TRUE) {
-                         echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                         x.style.display='block';</script>";
-                       } else {
-                       }
+                        if ($stmt->execute()) {
+                          $studentMessage = 'Student created successfully.';
+                          $studentMessageType = 'success';
+                        } else {
+                          $studentMessage = 'Unable to create the student. The student ID may already exist.';
+                          $studentMessageType = 'danger';
+                        }
 
-                     } catch (Exception $e) {
-
+                      } catch (Exception $e) {
+                        $studentMessage = 'Unable to create the student. Please verify the details and try again.';
+                        $studentMessageType = 'danger';
                      }
 
 
@@ -137,17 +195,20 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   <?php
 
                   if (isset($_POST['submit'])) {
-                    $sid = $_POST['sid'];
-                    $fname = $_POST['fname'];
-                    $lname = $_POST['lname'];
-                    $classroom = $_POST['classroom'];
-                    $email = $_POST['email'];
-                    $dob = date_format(new DateTime($_POST['dob']),'Y-m-d');
-                //echo $dob;
-                    $gender = $_POST['gender'];
-                    $address = $_POST['address'];
-
-                    $parent = $_POST['parent'];
+                    if (studentPostValue('submit') !== 'submit') {
+                      studentRejectInvalidInput();
+                    }
+                    studentPostValue('sid');
+                    $sid = $_GET['update'];
+                    $fname = studentPostValue('fname');
+                    $lname = studentPostValue('lname');
+                    $classroom = studentPostValue('classroom');
+                    $email = studentPostValue('email');
+                    $dob = studentDateValue(studentPostValue('dob'));
+                    $gender = studentPostValue('gender');
+                    $address = studentPostValue('address');
+                    $parent = studentPostValue('parent');
+                    studentValidateInput($sid, $fname, $lname, $email, $classroom, $dob, $gender, $address, $parent, false);
 
 
 
@@ -155,12 +216,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                     try {
 
-                      $sql = "UPDATE student set fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',parent=".$parent.",classroom='".$classroom."',email='".$email."' where sid='".$sid."'";
+                      $stmt = $conn->prepare("UPDATE student SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, parent = ?, classroom = ?, email = ? WHERE sid = ?");
+                      $stmt->bind_param("sssssssss", $fname, $lname, $dob, $address, $gender, $parent, $classroom, $email, $sid);
 
 
                    // $sql = "INSERT INTO student (sid,fname,lname,bday,address,gender,parent,classroom) VALUES ('".$sid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$classroom."')";
 
-                      if ($conn->query($sql) === TRUE) {
+                      if ($stmt->execute()) {
                        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                        x.style.display='block';</script>";
                      } else {
@@ -179,25 +241,33 @@ scratch. This page gets rid of all links and provides the needed markup only.
                  }
                }
 
-               ?>
+                ?>
+
+                <?php if ($studentMessage !== '') { ?>
+                  <div class="alert alert-<?php echo $studentMessageType; ?> alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <?php echo studentHtml($studentMessage); ?>
+                  </div>
+                <?php } ?>
 
 
-               <form role="form" method="POST" >
+                <form role="form" method="POST" >
+                 <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                 <div class="box-body">
 
                  <div class="form-group">
                   <label for="exampleInputPassword1">Student ID</label>
-                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$sid."'"; ?>>
+                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" required value="<?php echo studentHtml($sid); ?>">
                 </div>
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">First Name</label>
-                  <input name="fname" type="text" class="form-control" id="exampleInputPassword1" required value=<?php echo "'".$fname."'"; ?>>
+                  <input name="fname" type="text" class="form-control" id="exampleInputPassword1" required value="<?php echo studentHtml($fname); ?>">
                 </div>
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Last Name</label>
-                  <input name="lname" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$lname."'"; ?>>
+                  <input name="lname" type="text" class="form-control" id="exampleInputPassword1" required value="<?php echo studentHtml($lname); ?>">
                 </div>
 
                 <div class="form-group">
@@ -205,7 +275,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   <label>Date of Birth</label>
 
                   <div class="input-group date">
-                    <input type="date" name='dob' class="form-control pull-right" id="datepicker" placeholder="Select Student's Data of Birth" value=<?php echo "'".$dob."'"; ?>>
+                    <input type="date" name="dob" class="form-control pull-right" id="datepicker" placeholder="Select Student's Data of Birth" value="<?php echo studentHtml($dob); ?>">
                   </div>
                   <!-- /.input group -->
 
@@ -225,14 +295,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Email</label>
-                  <input name="email" type="email" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$email."'"; ?>>
+                  <input name="email" type="email" class="form-control" id="exampleInputPassword1" required value="<?php echo studentHtml($email); ?>">
                 </div>
 
 
 
                 <div class="form-group">
                   <label for="exampleFormControlTextarea1">Address</label>
-                  <textarea name="address" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo $address; ?></textarea>
+                  <textarea name="address" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo studentHtml($address); ?></textarea>
                 </div>
                 <div class="form-group">
                   <label>Class Room</label>
@@ -243,7 +313,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<option "; if($classroom==$row["hno"]){echo 'selected="selected"';} echo " value='".$row["hno"]."' >".$row["title"]."_ID:".$row["hno"]."</option>";
+                       $selected = ($classroom == $row["hno"]) ? ' selected="selected"' : '';
+                       echo '<option' . $selected . ' value="' . studentHtml($row["hno"]) . '">' . studentHtml($row["title"]) . '_ID:' . studentHtml($row["hno"]) . '</option>';
                     }
                   }
                   ?>
@@ -267,7 +338,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    while($row = $result->fetch_assoc()) {
 
 
-                    echo "<option "; if($parent==$row["pid"]){echo 'selected="selected"';} echo " value='".$row["pid"]."' >".$row["fname"]." ".$row["lname"]." - ID:".$row["pid"]."</option>";
+                    $selected = ($parent == $row["pid"]) ? ' selected="selected"' : '';
+                    echo '<option' . $selected . ' value="' . studentHtml($row["pid"]) . '">' . studentHtml($row["fname"]) . ' ' . studentHtml($row["lname"]) . ' - ID:' . studentHtml($row["pid"]) . '</option>';
                   }
                 }
 
@@ -279,7 +351,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
           <!-- /.box-body -->
 
           <div class="box-footer">
-            <button type="submit" name="submit" value="submit" class="btn btn-primary">Update Student</button>
+            <button type="submit" name="submit" value="submit" class="btn btn-primary"><?php echo isset($_GET['update']) ? 'Update Student' : 'Add Student'; ?></button>
           </div>
         </form>
 
@@ -343,7 +415,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // output data of each row
                    while($row = $result->fetch_assoc()) {
                     $class = (isset($_GET['update']) && $_GET['update'] == $row["sid"])?'parent':'';
-                    echo "<tr class='{$class}'><td> " . $row["sid"]. " </td><td> " . $row["fname"]." ". $row["lname"]. " </td><td> " . $row["bday"]. "</td><td>" . $row["gender"]. "</td><td>" . $row["address"]. "</td><td>" . $row["classroom"]. "</td><td>" . $row["parent"]. "</td><td><a href='student.php?update=". $row["sid"]."'><small class='btn btn-sm btn-primary'>Update</small></a></td></tr>";
+                    echo "<tr class='{$class}'><td>" . studentHtml($row["sid"]) . "</td><td>" . studentHtml($row["fname"]) . " " . studentHtml($row["lname"]) . "</td><td>" . studentHtml($row["bday"]) . "</td><td>" . studentHtml($row["gender"]) . "</td><td>" . studentHtml($row["address"]) . "</td><td>" . studentHtml($row["classroom"]) . "</td><td>" . studentHtml($row["parent"]) . "</td><td><a href='student.php?update=" . rawurlencode($row["sid"]) . "'><small class='btn btn-sm btn-primary'>Update</small></a></td></tr>";
                   }
                 }
 

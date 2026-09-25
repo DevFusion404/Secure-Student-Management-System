@@ -13,8 +13,10 @@ $sid =$fname =$lname = $classroom = $dob = $gender = $address = $subject=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM subject WHERE sid='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM subject WHERE sid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -87,9 +89,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO subject (sid,title,description) VALUES ( '".$sid."', '".$title."','".$description."')";
+                      $stmt = $conn->prepare("INSERT INTO subject (sid, title, description) VALUES (?, ?, ?)");
+                      $stmt->bind_param("sss", $sid, $title, $description);
 
-                      if ($conn->query($sql) === TRUE) {
+                      if ($stmt->execute()) {
                        echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                        x.style.display='block';</script>";
                      } else {
@@ -130,10 +133,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                    $sql = "UPDATE subject set title='".$title."',description='".$description."' where sid = '".$sid."' " ;
+                    $stmt = $conn->prepare("UPDATE subject SET title = ?, description = ? WHERE sid = ?");
+                    $stmt->bind_param("sss", $title, $description, $sid);
                   //  $sql = "INSERT INTO subject (sid,title,description) VALUES ( '".$sid."', '".$title."','".$description."')";
 
-                    if ($conn->query($sql) === TRUE) {
+                    if ($stmt->execute()) {
                      echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
                      x.style.display='block';</script>";
                    } else {
