@@ -186,7 +186,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<option value='".$row["id"]."' >".$row["subject"]." - ".$row["class"]." - ".$row["day"]." - ".$row["stime"]."</option>";
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<option value='".xssEscape($row["id"])."' >".xssEscape($row["subject"])." - ".xssEscape($row["class"])." - ".xssEscape($row["day"])." - ".xssEscape($row["stime"])."</option>";
                     }
                   }
                   ?>
@@ -272,8 +273,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<tr><td> " . $row["aid"]. " </td><td> " . $row["subject"]." </td><td> " . $row["class"]." </td><td> " . $row["date"]. "</td><td>" . $row["stime"]. "</td>
-                      <td><a href='attendancelist.php?aid=". $row["aid"]."&class=". $row["class"]."&stime=". $row["stime"]."&date=". $row["date"]."&subject=". $row["subject"]."'><small class='btn btn-sm btn-primary'>View Report</small></a></td></tr>";
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<tr><td> " . xssEscape($row["aid"]). " </td><td> " . xssEscape($row["subject"])." </td><td> " . xssEscape($row["class"])." </td><td> " . xssEscape($row["date"]). "</td><td>" . xssEscape($row["stime"]). "</td>
+                      <td><a href='attendancelist.php?aid=". xssEscape($row["aid"])."&class=". xssEscape($row["class"])."&stime=". xssEscape($row["stime"])."&date=". xssEscape($row["date"])."&subject=". xssEscape($row["subject"])."'><small class='btn btn-sm btn-primary'>View Report</small></a></td></tr>";
                     }
                   }
 
