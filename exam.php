@@ -1,4 +1,11 @@
 <?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('update' => 'id'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'subject' => 'id', 'teacher' => 'id', 'classroom' => 'id', 'date' => 'date', 'stime' => 'time', 'etime' => 'time', 'id' => 'id', 'fname' => 'name', 'lname' => 'name', 'email' => 'email', 'dob' => 'date', 'gender' => 'gender', 'address' => 'text', 'skill' => 'longtext', 'contact' => 'contact')
+);
 
 
 include_once 'database.php';
@@ -57,6 +64,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <title> Dashboard</title><link rel="icon" href="../img/favicon2.png">
   <!-- Tell the browser to be responsive to screen width -->
   <?php include_once 'header.php'; ?>
+  <!-- Date/time picker styles required by the exam form. -->
+  <link href="assets/vendors/bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 
 
 </head>
@@ -249,11 +258,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
             <label>Date</label>
 
-            <div class="input-group date">
-              <div class="input-group-addon">
+            <div class="input-group">
+              <button type="button" class="input-group-addon" data-open-picker="exam-date" aria-label="Select exam date">
                 <i class="fa fa-calendar"></i>
-              </div>
-              <input type="text" name='date' class="form-control pull-right" id="datepicker" placeholder="Select Student's Data of Birth">
+              </button>
+              <input type="date" name='date' class="form-control pull-right" id="exam-date" required>
             </div>
             <!-- /.input group -->
 
@@ -266,11 +275,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
               <label>Start Time:</label>
 
               <div class="input-group">
-                <input name="stime" type="text" class="form-control timepicker">
+                <input name="stime" type="time" class="form-control" id="exam-start-time" required>
 
-                <div class="input-group-addon">
+                <button type="button" class="input-group-addon" data-open-picker="exam-start-time" aria-label="Select start time">
                   <i class="fa fa-clock-o"></i>
-                </div>
+                </button>
               </div>
               <!-- /.input group -->
             </div>
@@ -283,11 +292,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
               <label>End Time:</label>
 
               <div class="input-group">
-                <input name="etime" type="text" class="form-control timepicker">
+                <input name="etime" type="time" class="form-control" id="exam-end-time" required>
 
-                <div class="input-group-addon">
+                <button type="button" class="input-group-addon" data-open-picker="exam-end-time" aria-label="Select end time">
                   <i class="fa fa-clock-o"></i>
-                </div>
+                </button>
               </div>
               <!-- /.input group -->
             </div>
