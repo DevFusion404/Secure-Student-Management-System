@@ -6,6 +6,12 @@
  * before any output, instead of calling session_start() directly.
  */
 
+// Never include PHP warnings or stack details in HTML responses. Log them for
+// administrators instead, so implementation errors cannot expose internals.
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+
 if (session_status() !== PHP_SESSION_ACTIVE) {
   // Reject session IDs the server did not issue, and never accept an ID from the URL.
   ini_set('session.use_strict_mode', '1');
@@ -21,7 +27,6 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
   session_start();
 }
-
 // Security headers. require_once guarantees they are sent once per request.
 if (!headers_sent()) {
   header("X-Frame-Options: DENY");
@@ -42,3 +47,4 @@ if (!headers_sent()) {
     . "form-action 'self'; "
     . "frame-ancestors 'none'");
 }
+

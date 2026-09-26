@@ -1,4 +1,11 @@
 <?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('update' => 'id'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'nic' => 'nic', 'fname' => 'name', 'lname' => 'name', 'gender' => 'gender', 'address' => 'text', 'email' => 'email', 'job' => 'text', 'contact' => 'contact')
+);
 
 
 include_once 'database.php';
@@ -14,7 +21,8 @@ verifyCSRFOnPost();
 ?>
 <?php
 
-$pid =$fname =$lname = $classroom = $dob = $gender = $address = $parent=" ";
+$pid = $fname = $lname = $nic = $email = $contact = $occupation = '';
+$gender = $address = '';
 
 
 if(isset($_GET['update'])){

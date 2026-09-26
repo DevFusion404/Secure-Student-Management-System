@@ -1,4 +1,11 @@
-<?php session_start();
+<?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('update' => 'id', 'delete' => 'id'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'delete' => 'id', 'notice' => 'longtext', 'odience' => 'audience', 'sid' => 'id', 'fname' => 'name', 'lname' => 'name', 'user' => 'username', 'email' => 'email', 'dob' => 'date', 'gender' => 'gender', 'address' => 'text', 'parent' => 'id')
+);
 
 
 include_once 'database.php';
@@ -6,6 +13,7 @@ if (!isset($_SESSION['user'])||$_SESSION['role']!='Teacher') {
   # code...
   header('Location:./logout.php');
   exit;
+}
 
 // Delete attempts must always fail with a forbidden response, even if the user
 // is not authenticated or is not a Teacher. This prevents a 302 redirect from

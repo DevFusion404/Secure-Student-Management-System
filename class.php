@@ -1,4 +1,11 @@
 <?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('update' => 'id'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'hno' => 'id', 'title' => 'text', 'location' => 'text', 'capacity' => 'capacity', 'sid' => 'id', 'fname' => 'name', 'lname' => 'name', 'classroom' => 'id', 'email' => 'email', 'dob' => 'date', 'gender' => 'gender', 'address' => 'text', 'parent' => 'id')
+);
 
 
 include_once 'database.php';

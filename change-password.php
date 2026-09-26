@@ -1,5 +1,12 @@
 <?php
 require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array(),
+  array('csrf_token' => 'token', 'submit' => 'action', 'password' => 'password')
+);
 include_once 'database.php';
 include_once 'csrf.php';
 verifyCSRFOnPost();
