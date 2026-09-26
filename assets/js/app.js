@@ -11,9 +11,26 @@ $(function () {
   // Time pickers (Gentelella pages).
   if ($.fn.datetimepicker) {
     $('#myDatepicker3, #myDatepicker4').datetimepicker({
-      format: 'hh:mm A'
+      format: 'HH:mm'
     });
   }
+
+  // Native exam controls: icon buttons open the browser picker when available.
+  $(document).on('click', '[data-open-picker]', function () {
+    var input = document.getElementById(this.getAttribute('data-open-picker'));
+    if (!input) {
+      return;
+    }
+    try {
+      if (typeof input.showPicker === 'function') {
+        input.showPicker();
+        return;
+      }
+    } catch (error) {
+      // Some browsers only allow focus; the native control remains available.
+    }
+    input.focus();
+  });
 
   // Tables (attendancelist.php, schedule-stu.php).
   if ($.fn.DataTable) {
