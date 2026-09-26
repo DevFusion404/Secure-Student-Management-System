@@ -1,7 +1,16 @@
 <?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array(),
+  array('csrf_token' => 'token', 'submit' => 'action', 'sid' => 'id', 'pid' => 'id', 'tid' => 'id', 'nic' => 'nic', 'fname' => 'name', 'lname' => 'name', 'classroom' => 'id', 'dob' => 'date', 'gender' => 'gender', 'address' => 'text', 'parent' => 'id', 'email' => 'email', 'job' => 'text', 'contact' => 'contact', 'skill' => 'longtext')
+);
 
 
 include_once 'database.php';
+$sid = $pid = $tid = $fname = $lname = $classroom = $dob = $gender = '';
+$address = $parent = $email = $nic = $contact = $occupation = $skill = '';
 if (!isset($_SESSION['user'])) {
     // Redirect unauthenticated users and terminate execution
     // to prevent protected page content from being served.
