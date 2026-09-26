@@ -1,4 +1,4 @@
-<?php session_start();
+<?php require_once 'security.php';
 
 
 include_once 'database.php';
@@ -33,7 +33,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 </head>
 
-<body class="nav-md">
+<body class="nav-md" data-active-menu="schedule-stu">
   <div class="container body">
     <div class="main_container">
       <div class="col-md-3 left_col">
@@ -99,7 +99,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                        while($row = $result->fetch_assoc()) {
                         $row2 = ($conn->query("select fname,lname from teacher where tid ='".$row["teacher"]."'"))->fetch_assoc();
                         $row3 = ($conn->query("select title from subject where sid ='".$row["subject"]."'"))->fetch_assoc();
-                        echo "<tr><td> " . $row["id"]. " </td><td> " . $row["subject"]." - " . $row3["title"]." </td><td> " . $row2["fname"]."  " . $row2["lname"]."</td><td> " . $row["class"]. "</td><td>" . $row["day"]. "</td><td>" . $row["stime"]. "</td><td>" . $row["etime"]. "</td></tr>";
+                        // XSS: Escape dynamic database values before rendering them.
+                        echo "<tr><td> " . xssEscape($row["id"]). " </td><td> " . xssEscape($row["subject"])." - " . xssEscape($row3["title"])." </td><td> " . xssEscape($row2["fname"])."  " . xssEscape($row2["lname"])."</td><td> " . xssEscape($row["class"]). "</td><td>" . xssEscape($row["day"]). "</td><td>" . xssEscape($row["stime"]). "</td><td>" . xssEscape($row["etime"]). "</td></tr>";
                       }
                     }
 
@@ -155,41 +156,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <?php include_once 'footer.php'; ?>
 
 
-<script type="text/javascript">
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-  $(function () {
-    $('#example1').DataTable()
-    $('#example2').DataTable({
-      'paging'      : true,
-      'lengthChange': false,
-      'searching'   : false,
-      'ordering'    : true,
-      'info'        : true,
-      'autoWidth'   : false
-    })
-  });
-  $('.select2').select2();
-  $('#datepicker').datepicker({
-    autoclose: true
-  });
-
-
-
-  var r = document.getElementById("schedule-stu");
-  r.className += "active";
-
-
-
-  $('.timepicker').timepicker({
-    showInputs: false
-  })
-
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-</script>
 
 </body>
 

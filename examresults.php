@@ -1,4 +1,11 @@
-<?php session_start();
+<?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('update' => 'id'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'exam' => 'id', 'student' => 'id', 'marks' => 'marks', 'grade' => 'grade')
+);
 
 
 include_once 'database.php';
@@ -18,8 +25,10 @@ $id =$fname =$lname = $classroom = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM examresult WHERE exam='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM examresult WHERE exam = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -105,11 +114,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO examresult(exam,student,marks,grade) VALUES (".$exam.", '".$student."', ".$marks.",'".$grade."')";
+                      $stmt = $conn->prepare("INSERT INTO examresult(exam, student, marks, grade) VALUES (?, ?, ?, ?)");
+                      $stmt->bind_param("ssss", $exam, $student, $marks, $grade);
 
-                      if ($conn->query($sql) === TRUE) {
-                       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                       x.style.display='block';</script>";
+                      if ($stmt->execute()) {
+                       echo "<span class='js-show-truemsg' hidden></span>";
                      } else {
                      }
 
@@ -156,11 +165,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                    $sql = "INSERT INTO examresult(exam,student,marks,grade) VALUES (".$exam.", '".$student."', ".$marks.",'".$grade."')";
+                    $stmt = $conn->prepare("INSERT INTO examresult(exam, student, marks, grade) VALUES (?, ?, ?, ?)");
+                    $stmt->bind_param("ssss", $exam, $student, $marks, $grade);
 
-                    if ($conn->query($sql) === TRUE) {
-                     echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                     x.style.display='block';</script>";
+                    if ($stmt->execute()) {
+                     echo "<span class='js-show-truemsg' hidden></span>";
                    } else {
                    }
 
@@ -195,7 +204,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<option value='".$row["id"]."' >".$row["subject"]." - ID:".$row["id"]." - Date:".$row["date"]."</option>";
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<option value='".xssEscape($row["id"])."' >".xssEscape($row["subject"])." - ID:".xssEscape($row["id"])." - Date:".xssEscape($row["date"])."</option>";
                     }
                   }
                   ?>
@@ -214,7 +224,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   if ($result->num_rows > 0) {
                    // output data of each row
                    while($row = $result->fetch_assoc()) {
-                    echo "<option value='".$row["sid"]."' >".$row["fname"]." ".$row["lname"]." -ID:".$row["sid"]."</option>";
+                    // XSS: Escape dynamic database values before rendering them.
+                    echo "<option value='".xssEscape($row["sid"])."' >".xssEscape($row["fname"])." ".xssEscape($row["lname"])." -ID:".xssEscape($row["sid"])."</option>";
                   }
                 }
                 ?>
@@ -309,7 +320,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 if ($result->num_rows > 0) {
                    // output data of each row
                  while($row = $result->fetch_assoc()) {
-                  echo "<tr><td> " . $row["exam"]. " </td><td> " . $row["student"]." </td><td> " . $row["marks"]." </td><td> " . $row["grade"]. "</td></tr>";
+                  // XSS: Escape dynamic database values before rendering them.
+                  echo "<tr><td> " . xssEscape($row["exam"]). " </td><td> " . xssEscape($row["student"])." </td><td> " . xssEscape($row["marks"])." </td><td> " . xssEscape($row["grade"]). "</td></tr>";
                 }
               }
 

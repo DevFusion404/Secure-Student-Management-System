@@ -1,4 +1,11 @@
-<?php session_start();
+<?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('delete' => 'id'),
+  array('csrf_token' => 'token', 'delete' => 'id')
+);
 
 
 include_once 'database.php';
@@ -114,7 +121,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         if ($result->num_rows > 0) {
                    // output data of each row
                          while($row = $result->fetch_assoc()) {
-                          echo "<tr><td> " . $row["id"]. " </td><td> " . $row["notice"]." </td><td> " . $row["date"]." </td>
+                          $noticeId = (int) $row['id'];
+                          $noticeText = htmlspecialchars($row['notice'], ENT_QUOTES, 'UTF-8');
+                          $noticeDate = htmlspecialchars($row['date'], ENT_QUOTES, 'UTF-8');
+                          echo "<tr><td> " . $noticeId . " </td><td> " . $noticeText . " </td><td> " . $noticeDate . " </td>
                           </tr>";
                         }
                       }
@@ -150,11 +160,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <?php include_once 'footer.php'; ?>
 
 
-<script type="text/javascript">
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-</script>
 
 </body>
 

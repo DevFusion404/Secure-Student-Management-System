@@ -12,7 +12,7 @@
             </div>
             <div class="profile_info">
               <span>Welcome,</span>
-              <h2><?php echo $_SESSION['user']; ?></h2>
+              <h2><!-- XSS: Escape the session display name before rendering it. --><?php echo xssEscape($_SESSION['user'] ?? ''); ?></h2>
             </div>
           </div>
           <!-- /menu profile quick info -->

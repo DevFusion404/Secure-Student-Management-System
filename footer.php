@@ -59,3 +59,5 @@
 
 <!-- Custom Theme Scripts -->
 <script src="assets/js/custom.js"></script>
+<!-- Page behaviour (replaces inline scripts; required by the CSP) -->
+<script src="assets/js/app.js"></script>

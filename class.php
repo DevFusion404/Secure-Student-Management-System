@@ -1,4 +1,11 @@
-<?php session_start();
+<?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('update' => 'id'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'hno' => 'id', 'title' => 'text', 'location' => 'text', 'capacity' => 'capacity', 'sid' => 'id', 'fname' => 'name', 'lname' => 'name', 'classroom' => 'id', 'email' => 'email', 'dob' => 'date', 'gender' => 'gender', 'address' => 'text', 'parent' => 'id')
+);
 
 
 include_once 'database.php';
@@ -18,8 +25,10 @@ $hno =$fname =$lname = $classroom = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM classroom WHERE hno='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM classroom WHERE hno = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -98,11 +107,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO classroom(hno,title,location,capacity) VALUES ( '".$hno."', '".$title."','".$location."',".$capacity.")";
+                      $stmt = $conn->prepare("INSERT INTO classroom(hno, title, location, capacity) VALUES (?, ?, ?, ?)");
+                      $stmt->bind_param("ssss", $hno, $title, $location, $capacity);
 
-                      if ($conn->query($sql) === TRUE) {
-                       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                       x.style.display='block';</script>";
+                      if ($stmt->execute()) {
+                       echo "<span class='js-show-truemsg' hidden></span>";
                      } else {
                      }
 
@@ -148,14 +157,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                   try {
 
-                    $sql = "UPDATE classroom set fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',parent=".$parent.",classroom='".$classroom."',email='".$email."' where hno='".$hno."'";
+                    $stmt = $conn->prepare("UPDATE classroom SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, parent = ?, classroom = ?, email = ? WHERE hno = ?");
+                    $stmt->bind_param("sssssssss", $fname, $lname, $dob, $address, $gender, $parent, $classroom, $email, $hno);
 
 
                    // $sql = "INSERT INTO classroom (hno,fname,lname,bday,address,gender,parent,classroom) VALUES ('".$hno."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$classroom."')";
 
-                    if ($conn->query($sql) === TRUE) {
-                     echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                     x.style.display='block';</script>";
+                    if ($stmt->execute()) {
+                     echo "<span class='js-show-truemsg' hidden></span>";
                    } else {
                    }
 
@@ -272,7 +281,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // output data of each row
                        while($row = $result->fetch_assoc()) {
                         $class = (isset($_GET['update']) && $_GET['update'] == $row["hno"])?'parent':'';
-                        echo "<tr class='{$class}'><td> " . $row["hno"]. " </td><td> " . $row["title"]. "</td><td>" . $row["location"]. "</td><td>" . $row["capacity"]. "</td></tr>";
+                        // XSS: Escape dynamic database values before rendering them.
+                        echo "<tr class='{$class}'><td> " . xssEscape($row["hno"]). " </td><td> " . xssEscape($row["title"]). "</td><td>" . xssEscape($row["location"]). "</td><td>" . xssEscape($row["capacity"]). "</td></tr>";
                       }
                     }
 

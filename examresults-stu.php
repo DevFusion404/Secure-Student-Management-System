@@ -1,4 +1,4 @@
-<?php session_start();
+<?php require_once 'security.php';
 
 
 include_once 'database.php';
@@ -85,7 +85,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         if ($result->num_rows > 0) {
                    // output data of each row
                          while($row = $result->fetch_assoc()) {
-                          echo "<tr><td> " . $row["exam"]. " </td><td> " . $row["student"]." </td><td> " . $row["marks"]." </td><td> " . $row["grade"]. "</td></tr>";
+                          // XSS: Escape dynamic database values before rendering them.
+                          echo "<tr><td> " . xssEscape($row["exam"]). " </td><td> " . xssEscape($row["student"])." </td><td> " . xssEscape($row["marks"])." </td><td> " . xssEscape($row["grade"]). "</td></tr>";
                         }
                       }
 
@@ -121,11 +122,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <?php include_once 'footer.php'; ?>
 
 
-<script type="text/javascript">
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-</script>
 
 </body>
 

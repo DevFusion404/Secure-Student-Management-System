@@ -1,5 +1,12 @@
 <?php
-session_start();
+require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array(),
+  array('csrf_token' => 'token', 'submit' => 'action', 'email' => 'email', 'password' => 'password')
+);
 include_once 'database.php';
 
 // CSRF: the login form carries a token too, preventing login CSRF.
@@ -9,33 +16,53 @@ verifyCSRFOnPost();
 $message = '';
 if (isset($_POST['submit'])) {
   $email = $_POST['email'];
-  $password = md5($_POST['password']);
-  $sql = "SELECT * FROM user WHERE email ='".$email."' and password = '".$password."' ";
-  $result = $conn->query($sql);
+  $password = $_POST['password'];
+  $stmt = $conn->prepare(
+    "SELECT * FROM user WHERE email = ?"
+  );
+  $stmt->bind_param("s", $email);
+  $stmt->execute();
+  $result = $stmt->get_result();
   if ($result->num_rows > 0) {
-// output data of each row
-    while($row = $result->fetch_assoc()) {
+    $row = $result->fetch_assoc();
+
+    if (password_verify($password, $row['password'])) {
+      session_regenerate_id(true);
+
+      if ($row['must_change_password'] == 1) {
+        $_SESSION['change_password_email'] = $row['email'];
+        header("Location:change-password.php");
+        exit();
+      }
+
       $_SESSION['role'] = $row['role'];
       $_SESSION['user'] = $row['fname']." ".$row['lname'];
-    }
-    $role_table = strtolower($_SESSION['role']);
-    $sql2 = "SELECT * FROM `".$role_table."` WHERE `email` ='".$email."'";
-    $result2 = $conn->query($sql2);
-    if ($result2->num_rows > 0) {
-      while($row2 = $result2->fetch_assoc()) {
-        $_SESSION['user'] = $row2['fname']." ".$row2['lname'];
+
+      $role_table = strtolower($_SESSION['role']);
+      $sql2 = "SELECT * FROM `".$role_table."` WHERE `email` = ?";
+      $stmt2 = $conn->prepare($sql2);
+      $stmt2->bind_param("s", $email);
+      $stmt2->execute();
+      $result2 = $stmt2->get_result();
+      if ($result2->num_rows > 0) {
+        while($row2 = $result2->fetch_assoc()) {
+          $_SESSION['user'] = $row2['fname']." ".$row2['lname'];
 //$_SESSION['uid'] = $row2['pid'];
-        if($_SESSION['role']=='Student'){
-          $_SESSION['uid']=$row2['sid'];
-        }else if($_SESSION['role']=='Parent'){
-          $_SESSION['uid']=$row2['pid'];
-        }else if($_SESSION['role']=='Teacher'){
-          $_SESSION['uid']=$row2['tid'];
+          if($_SESSION['role']=='Student'){
+            $_SESSION['uid']=$row2['sid'];
+          }else if($_SESSION['role']=='Parent'){
+            $_SESSION['uid']=$row2['pid'];
+          }else if($_SESSION['role']=='Teacher'){
+            $_SESSION['uid']=$row2['tid'];
+          }
         }
       }
+      header("Location:./");
+      exit();
+    } else {
+      $message = "<p style='width:100%;text-align;center'>Incorrect username or password</p>";
     }
-    header("Location:./");
-  }else{
+  } else {
     $message = "<p style='width:100%;text-align;center'>Incorrect username or password</p>";
   }
 }
@@ -83,6 +110,12 @@ if (isset($_POST['submit'])) {
               <!-- /.col -->
               <div class="col-xs-12">
                 <button name="submit" value="submit" type="submit" class="btn btn-success btn-block btn-flat">Sign In</button>
+                <br>
+                <a href="google-login.php" 
+                class="btn btn-primary btn-block btn-flat">
+                  <i class="fa fa-google"></i>
+                  Sign in with Google
+                </a>
               </div>
               <!-- /.col -->
               <div>

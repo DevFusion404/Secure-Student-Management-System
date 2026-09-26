@@ -1,4 +1,11 @@
-<?php session_start(); 
+<?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('aid' => 'id', 'class' => 'id', 'stime' => 'time', 'date' => 'date', 'subject' => 'id', 'mark' => 'id', 'view' => 'id'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'submitatt' => 'action', 'schedule' => 'id', 'date' => 'date', 'att' => 'attendance-list', 'sid' => 'id-list', 'aid' => 'id-list')
+); 
 
 
 include_once 'database.php';
@@ -54,7 +61,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
 </head>
 
-<body class="hold-transition skin-green sidebar-mini">
+<body class="hold-transition skin-green sidebar-mini" data-active-menu="attendance">
 <div class="wrapper">
 
   <!-- Main Header -->
@@ -109,18 +116,21 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                   <div class="form-group">
                   <label for="exampleInputPassword1">Attendance ID</label>
-                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value=<?php echo "'".$_GET['aid']."'"; ?>>
+                  <!-- XSS: Escape request values before rendering them in form fields. -->
+                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value="<?php echo xssEscape($_GET['aid'] ?? ''); ?>">
                 </div>
 
                   <div class="form-group">
                   <label for="exampleInputPassword1">Date</label>
-                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value=<?php echo "'".$_GET['date']."'"; ?>>
+                  <!-- XSS: Escape request values before rendering them in form fields. -->
+                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value="<?php echo xssEscape($_GET['date'] ?? ''); ?>">
                 </div>
 
 
                   <div class="form-group">
                   <label for="exampleInputPassword1">Subject ID</label>
-                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value=<?php echo "'".$_GET['subject']."'"; ?>>
+                  <!-- XSS: Escape request values before rendering them in form fields. -->
+                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value="<?php echo xssEscape($_GET['subject'] ?? ''); ?>">
                 </div>
 
 
@@ -128,7 +138,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Start Time</label>
-                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value=<?php echo "'".$_GET['stime']."'"; ?>>
+                  <!-- XSS: Escape request values before rendering them in form fields. -->
+                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value="<?php echo xssEscape($_GET['stime'] ?? ''); ?>">
                 </div>
 
 
@@ -146,13 +157,23 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                   <?php
 
-                  $sql = "SELECT * from attendancereport where aid =".$_GET['aid'];
-                  $result = $conn->query($sql);
+                  $stmt = $conn->prepare("SELECT * FROM attendancereport WHERE aid = ?");
+                  $stmt->bind_param("s", $_GET['aid']);
+                  $stmt->execute();
+                  $result = $stmt->get_result();
 
                   if ($result->num_rows > 0) {
-            echo ' <a  href="attendancelist.php?view='.$_GET['aid'].'&aid='.$_GET['aid'].'&date='.$_GET['date'].'&subject='.$_GET['subject'].'&stime='.$_GET['stime'].'"  class="btn btn-primary">View Attendance</a>';
+            // XSS: URL-encode request values and escape the rendered link attribute.
+            $viewUrl = 'attendancelist.php?' . http_build_query(array('view' => $_GET['aid'] ?? '', 'aid' => $_GET['aid'] ?? '', 'date' => $_GET['date'] ?? '', 'subject' => $_GET['subject'] ?? '', 'stime' => $_GET['stime'] ?? ''), '', '&', PHP_QUERY_RFC3986);
+            // XSS: Escape dynamic values before rendering them in HTML.
+            echo ' <a href="' . xssEscape($viewUrl) . '" class="btn btn-primary">View Attendance</a>';
               
-                                  }else{echo '<a href="attendancelist.php?mark='.$_GET['aid'].'&class='.$_GET['class'].'&aid='.$_GET['aid'].'&date='.$_GET['date'].'&subject='.$_GET['subject'].'&stime='.$_GET['stime'].'  "class="btn btn-primary">Mark Attendance</a>';}
+                                  }else{
+                                  // XSS: URL-encode request values and escape the rendered link attribute.
+                                  $markUrl = 'attendancelist.php?' . http_build_query(array('mark' => $_GET['aid'] ?? '', 'class' => $_GET['class'] ?? '', 'aid' => $_GET['aid'] ?? '', 'date' => $_GET['date'] ?? '', 'subject' => $_GET['subject'] ?? '', 'stime' => $_GET['stime'] ?? ''), '', '&', PHP_QUERY_RFC3986);
+                                  // XSS: Escape dynamic values before rendering them in HTML.
+                                  echo '<a href="' . xssEscape($markUrl) . '" class="btn btn-primary">Mark Attendance</a>';
+                                  }
 
                   ?>
 
@@ -175,11 +196,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                   try {
 
-                    $sql = "INSERT INTO attendance Report (`date`,sid) VALUES ('".$date."', '".$sid."')";
+                    $stmt = $conn->prepare("INSERT INTO attendance Report (`date`, sid) VALUES (?, ?)");
+                    $stmt->bind_param("ss", $date, $sid);
 
-                  if ($conn->query($sql) === TRUE) {
-                         echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-x.style.display='block';</script>";
+                  if ($stmt->execute()) {
+                         echo "<span class='js-show-truemsg' hidden></span>";
                       } else {
                             }
                     
@@ -231,17 +252,21 @@ x.style.display='block';</script>";
 
                   <?php
 
-                  $sql = "SELECT * from student where classroom='".$_GET['class']."'";
-                  $result = $conn->query($sql);
+                  $stmt = $conn->prepare("SELECT * FROM student WHERE classroom = ?");
+                  $stmt->bind_param("s", $_GET['class']);
+                  $stmt->execute();
+                  $result = $stmt->get_result();
 
                   if ($result->num_rows > 0) {
                     $x=0;
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<tr><td> " . $row["sid"]. " </td><td> " . $row["fname"]." " . $row["lname"]." </td>
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<tr><td> " . xssEscape($row["sid"]). " </td><td> " . xssEscape($row["fname"])." " . xssEscape($row["lname"])." </td>
                       <td><div class='form-group'>
-                 <input type='hidden' name='sid[]'' value='".$row["sid"]."' />
-                 <input type='hidden' name='aid[]'' value='".$_GET["aid"]."' />
+                 <input type='hidden' name='sid[]'' value='".xssEscape($row["sid"])."' />
+                 <!-- XSS: Escape request values before rendering them in form fields. -->
+                 <input type='hidden' name='aid[]'' value='".xssEscape($_GET["aid"] ?? '')."' />
                   <div class='radio '>
   <label style='width: 100px'><input type='radio' name='att[".$x."]' value='Present' checked> &nbsp&nbsp&nbspPresent</label>
   <label style='width: 100px'><input type='radio' name='att[".$x."]' value='Absent' checked> &nbsp&nbsp&nbspAbsent</label>
@@ -303,15 +328,18 @@ x.style.display='block';</script>";
 
                   <?php
 
-                  $sql = "SELECT * from attendancereport,student where aid='".$_GET['aid']."' and attendancereport.sid = student.sid";
-                  $result = $conn->query($sql);
+                  $stmt = $conn->prepare("SELECT * FROM attendancereport, student WHERE aid = ? AND attendancereport.sid = student.sid");
+                  $stmt->bind_param("s", $_GET['aid']);
+                  $stmt->execute();
+                  $result = $stmt->get_result();
 
                   if ($result->num_rows > 0) {
                     
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<tr><td> " . $row["sid"]. " </td><td> " . $row["fname"]." " . $row["lname"]." </td>
-                      <td>" . $row["status"]. " </td>
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<tr><td> " . xssEscape($row["sid"]). " </td><td> " . xssEscape($row["fname"])." " . xssEscape($row["lname"])." </td>
+                      <td>" . xssEscape($row["status"]). " </td>
 
 
                       </tr>"; 
@@ -402,44 +430,8 @@ x.style.display='block';</script>";
 <script src="dist/js/adminlte.min.js"></script>
 <!-- AdminLTE for demo purposes -->
 <script src="dist/js/demo.js"></script>
-<!-- Page script -->
-
-<script>
-  $(function () {
-    $('#example1').DataTable()
-    $('#example2').DataTable({
-      'paging'      : true,
-      'lengthChange': false,
-      'searching'   : false,
-      'ordering'    : true,
-      'info'        : true,
-      'autoWidth'   : false
-    })
-  })
-</script>
-
-
-
-
-<script>   $('.select2').select2()
-  $('#datepicker').datepicker({
-      autoclose: true
-    });
-
-
-        
-            var r = document.getElementById("attendance"); 
-            r.className += "active"; 
-
-
-
-            $('.timepicker').timepicker({
-      showInputs: false
-    })
-           
-    </script> 
-
-
+<!-- Page behaviour (replaces inline scripts; required by the CSP) -->
+<script src="assets/js/app.js"></script>
 
 <!-- Optionally, you can add Slimscroll and FastClick plugins.
      Both of these plugins are recommended to enhance the
@@ -463,8 +455,7 @@ if(isset($_POST['submitatt']))
         $attendance->bind_param("iss", $aid,$sid, $att);
         $attendance->execute();
 
-         echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-x.style.display='block';</script>";
+         echo "<span class='js-show-truemsg' hidden></span>";
     }
      
     if ($conn->affected_rows>0) {

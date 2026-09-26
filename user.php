@@ -1,4 +1,11 @@
-<?php session_start();
+<?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('update' => 'text', 'email' => 'email'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'delete' => 'email', 'email' => 'email', 'password' => 'password', 'role' => 'role', 'sid' => 'id', 'fname' => 'name', 'lname' => 'name', 'user' => 'username', 'dob' => 'date', 'gender' => 'gender', 'address' => 'text', 'parent' => 'id')
+);
 
 
 include_once 'database.php';
@@ -19,12 +26,38 @@ if (($_SESSION['role'] ?? '') !== 'Teacher') {
 include_once 'csrf.php';
 verifyCSRFOnPost();
 
-// Delete is POST-only (token already verified above); GET ?delete= is ignored.
+// Delete is POST-only; GET ?delete= is ignored.
+// Checks: 1) CSRF token (verified above), 2) authorization (Teacher-only
+// guard above), 3) the user account must exist.
 if (isset($_POST['delete'])) {
-  $stmt = $conn->prepare("DELETE FROM user WHERE email = ?");
-  $stmt->bind_param("s", $_POST['delete']);
+  $email = is_string($_POST['delete']) ? trim($_POST['delete']) : '';
+  if ($email === '') {
+    http_response_code(400);
+    exit('Invalid user email.');
+  }
+
+  $stmt = $conn->prepare("SELECT email FROM user WHERE email = ?");
+  $stmt->bind_param("s", $email);
   $stmt->execute();
+  $stmt->store_result();
+  $exists = $stmt->num_rows > 0;
   $stmt->close();
+  if (!$exists) {
+    http_response_code(404);
+    exit('User not found.');
+  }
+
+  $stmt = $conn->prepare("DELETE FROM user WHERE email = ?");
+  $stmt->bind_param("s", $email);
+  if (!$stmt->execute()) {
+    $stmt->close();
+    http_response_code(500);
+    exit('Unable to delete user.');
+  }
+  $stmt->close();
+  // Post/Redirect/Get: a page refresh must not resubmit the delete.
+  header('Location: user.php');
+  exit;
 }
 ?>
 <?php
@@ -34,8 +67,14 @@ $sid =$fname =$lname = $user = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM user WHERE sid='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM user WHERE sid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $stmt = $conn->prepare("SELECT * FROM user WHERE sid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -55,8 +94,14 @@ if(isset($_GET['update'])){
   }
 }
 if(isset($_GET['email'])){
-  $update = "SELECT * FROM user WHERE email='".$_GET['email']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM user WHERE email = ?");
+  $stmt->bind_param("s", $_GET['email']);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $stmt = $conn->prepare("SELECT * FROM user WHERE email = ?");
+  $stmt->bind_param("s", $_GET['email']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -118,15 +163,15 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   if (isset($_POST['submit'])) {
                     if($_POST['submit'] == 'update_user') {
                       $email = $_GET['email'];
-                      $password = md5($_POST['password']);
+                      $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
                       $role = $_POST['role'];
                       try {
 
-                        $sql = "UPDATE user set password='".$password."',role='".$role."' where email='".$email."'";
+                        $stmt = $conn->prepare("UPDATE user SET password = ?, role = ? WHERE email = ?");
+                        $stmt->bind_param("sss", $password, $role, $email);
 
-                        if ($conn->query($sql) === TRUE) {
-                         echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                         x.style.display='block';</script>";
+                        if ($stmt->execute()) {
+                         echo "<span class='js-show-truemsg' hidden></span>";
                        } else {
                        }
 
@@ -135,16 +180,16 @@ scratch. This page gets rid of all links and provides the needed markup only.
                      }
                    } else {
                      $email = $_POST['email'];
-                     $password = md5($_POST['password']);
+                     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
                      $role = $_POST['role'];
 
                      try {
 
-                      $sql = "INSERT INTO user(email,password,role) VALUES ('".$email."', '".$password."', '".$role."')";
+                       $stmt = $conn->prepare("INSERT INTO user(email, password, role) VALUES (?, ?, ?)");
+                       $stmt->bind_param("sss", $email, $password, $role);
 
-                      if ($conn->query($sql) === TRUE) {
-                       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                       x.style.display='block';</script>";
+                       if ($stmt->execute()) {
+                       echo "<span class='js-show-truemsg' hidden></span>";
                      } else {
                      }
 
@@ -186,14 +231,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 try {
 
-                  $sql = "UPDATE user set fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',parent=".$parent.",user='".$user."',email='".$email."' where sid='".$sid."'";
+                  $stmt = $conn->prepare("UPDATE user SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, parent = ?, user = ?, email = ? WHERE sid = ?");
+                  $stmt->bind_param("sssssssss", $fname, $lname, $dob, $address, $gender, $parent, $user, $email, $sid);
 
 
                    // $sql = "INSERT INTO user (sid,fname,lname,bday,address,gender,parent,user) VALUES ('".$sid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$user."')";
 
-                  if ($conn->query($sql) === TRUE) {
-                   echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                   x.style.display='block';</script>";
+                  if ($stmt->execute()) {
+                   echo "<span class='js-show-truemsg' hidden></span>";
                  } else {
                  }
 
@@ -221,7 +266,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
               <div class="form-group">
                 <label>User</label>
                 <?php if(isset($_GET['email'])): ?>
-                  <?php echo $email; ?>
+                  <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                  <?php echo xssEscape($email); ?>
                   <?php else: ?>
 
 
@@ -232,7 +278,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                       if ($result->num_rows > 0) {
                    // output data of each row
                        while($row = $result->fetch_assoc()) {
-                        echo "<option value='".$row["email"]."' > ".$row["email"]." </option>";
+                        // XSS: Escape dynamic database values before rendering them.
+                        echo "<option value='".xssEscape($row["email"])."' > ".xssEscape($row["email"])." </option>";
                       }
                     }
                     ?>
@@ -325,12 +372,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
                      if ($result->num_rows > 0) {
                    // output data of each row
                        while($row = $result->fetch_assoc()) {
-                        echo "<tr><td> " . $row["email"]. " </td><td> " . $row["role"]." </td>
+                        // XSS: Escape dynamic database values before rendering them.
+                        echo "<tr><td> " . xssEscape($row["email"]). " </td><td> " . xssEscape($row["role"])." </td>
                         <td><form method='POST' action='user.php' class='delete-user' style='display:inline'>
                           <input type='hidden' name='csrf_token' value='" . generateCSRFToken() . "'>
-                          <input type='hidden' name='delete' value='" . htmlspecialchars($row["email"], ENT_QUOTES, 'UTF-8') . "'>
-                          <button type='submit' class='btn btn-sm btn-primary'><small>Delete</small></button>
-                        </form><br><a href='user.php?email=". $row["email"]."' class='update-user'><small class='btn btn-sm btn-danger'>Update</small></a>
+                          <button type='submit' name='delete' value='" . xssEscape($row["email"]) . "' formmethod='post' formaction='user.php' formnovalidate class='btn btn-sm btn-primary'><small>Delete</small></button>
+                        </form><br><a href='user.php?email=". xssEscape($row["email"])."' class='update-user'><small class='btn btn-sm btn-danger'>Update</small></a>
                         </td></tr>";
                       }
                     }
@@ -367,15 +414,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <?php include_once 'footer.php'; ?>
 
 
-<script type="text/javascript">
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-
-  $('form.delete-user').submit(function(){
-    return confirm("Are you sure you want to delete?");
-  });
-</script>
 
 </body>
 

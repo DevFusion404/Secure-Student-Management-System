@@ -313,17 +313,35 @@ INSERT INTO `teacher` (`tid`, `fname`, `lname`, `address`, `contact`, `bday`, `s
 CREATE TABLE `user` (
   `role` varchar(50) NOT NULL,
   `email` varchar(50) NOT NULL,
-  `password` varchar(50) NOT NULL
+  `password` varchar(255) NOT NULL,
+  `must_change_password` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `user`
 --
 
-INSERT INTO `user` (`role`, `email`, `password`) VALUES
-('Parent', 'parent@gmail.com', '81dc9bdb52d04dc20036dbd8313ed055'),
-('Student', 'student@gmail.com', '81dc9bdb52d04dc20036dbd8313ed055'),
-('Teacher', 'teacher@gmail.com', '81dc9bdb52d04dc20036dbd8313ed055');
+INSERT INTO user
+(`role`,`email`,`password`,`must_change_password`)
+VALUES
+(
+'Parent',
+'parent@gmail.com',
+'$2y$10$hffYa5k4Z5A4p1m5SxBf1ej54lZBbp9PnQmVnblGgp4729ebstoRG',
+1
+),
+(
+'Student',
+'student@gmail.com',
+'$2y$10$hffYa5k4Z5A4p1m5SxBf1ej54lZBbp9PnQmVnblGgp4729ebstoRG',
+1
+),
+(
+'Teacher',
+'teacher@gmail.com',
+'$2y$10$hffYa5k4Z5A4p1m5SxBf1ej54lZBbp9PnQmVnblGgp4729ebstoRG',
+1
+);
 
 --
 -- Indexes for dumped tables

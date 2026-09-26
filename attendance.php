@@ -1,4 +1,11 @@
-<?php session_start();
+<?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('update' => 'id'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'schedule' => 'id', 'date' => 'date', 'sid' => 'id', 'fname' => 'name', 'lname' => 'name', 'email' => 'email', 'dob' => 'date', 'gender' => 'gender', 'address' => 'text', 'parent' => 'id')
+);
 
 
 include_once 'database.php';
@@ -18,8 +25,10 @@ $sid =$fname =$lname = $schedule = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM schedule WHERE sid='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM schedule WHERE sid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -94,11 +103,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                     try {
 
-                      $sql = "INSERT INTO attendance (`date`,sid) VALUES ('".$date."', '".$sid."')";
+                      $stmt = $conn->prepare("INSERT INTO attendance (`date`, sid) VALUES (?, ?)");
+                      $stmt->bind_param("ss", $date, $sid);
 
-                      if ($conn->query($sql) === TRUE) {
-                       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                       x.style.display='block';</script>";
+                      if ($stmt->execute()) {
+                       echo "<span class='js-show-truemsg' hidden></span>";
                      } else {
                      }
 
@@ -143,14 +152,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                   try {
 
-                    $sql = "UPDATE schedule set fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',parent=".$parent.",schedule='".$schedule."',email='".$email."' where sid='".$sid."'";
+                    $stmt = $conn->prepare("UPDATE schedule SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, parent = ?, schedule = ?, email = ? WHERE sid = ?");
+                    $stmt->bind_param("sssssssss", $fname, $lname, $dob, $address, $gender, $parent, $schedule, $email, $sid);
 
 
                    // $sql = "INSERT INTO schedule (sid,fname,lname,bday,address,gender,parent,schedule) VALUES ('".$sid."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$parent."','".$schedule."')";
 
-                    if ($conn->query($sql) === TRUE) {
-                     echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                     x.style.display='block';</script>";
+                    if ($stmt->execute()) {
+                     echo "<span class='js-show-truemsg' hidden></span>";
                    } else {
                    }
 
@@ -184,7 +193,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<option value='".$row["id"]."' >".$row["subject"]." - ".$row["class"]." - ".$row["day"]." - ".$row["stime"]."</option>";
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<option value='".xssEscape($row["id"])."' >".xssEscape($row["subject"])." - ".xssEscape($row["class"])." - ".xssEscape($row["day"])." - ".xssEscape($row["stime"])."</option>";
                     }
                   }
                   ?>
@@ -270,8 +280,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<tr><td> " . $row["aid"]. " </td><td> " . $row["subject"]." </td><td> " . $row["class"]." </td><td> " . $row["date"]. "</td><td>" . $row["stime"]. "</td>
-                      <td><a href='attendancelist.php?aid=". $row["aid"]."&class=". $row["class"]."&stime=". $row["stime"]."&date=". $row["date"]."&subject=". $row["subject"]."'><small class='btn btn-sm btn-primary'>View Report</small></a></td></tr>";
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<tr><td> " . xssEscape($row["aid"]). " </td><td> " . xssEscape($row["subject"])." </td><td> " . xssEscape($row["class"])." </td><td> " . xssEscape($row["date"]). "</td><td>" . xssEscape($row["stime"]). "</td>
+                      <td><a href='attendancelist.php?aid=". xssEscape($row["aid"])."&class=". xssEscape($row["class"])."&stime=". xssEscape($row["stime"])."&date=". xssEscape($row["date"])."&subject=". xssEscape($row["subject"])."'><small class='btn btn-sm btn-primary'>View Report</small></a></td></tr>";
                     }
                   }
 
@@ -307,11 +318,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <?php include_once 'footer.php'; ?>
 
 
-<script type="text/javascript">
-  $('#myDatepicker3, #myDatepicker4').datetimepicker({
-    format: 'hh:mm A'
-  });
-</script>
 
 </body>
 

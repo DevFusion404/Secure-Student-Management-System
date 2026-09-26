@@ -1,4 +1,11 @@
-<?php session_start();
+<?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('update' => 'id'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'sid' => 'id', 'title' => 'text', 'description' => 'longtext')
+);
 
 
 include_once 'database.php';
@@ -14,12 +21,14 @@ verifyCSRFOnPost();
 ?>
 <?php
 
-$sid =$fname =$lname = $classroom = $dob = $gender = $address = $subject=" ";
+$sid = $title = $description = '';
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM subject WHERE sid='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM subject WHERE sid = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -92,11 +101,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO subject (sid,title,description) VALUES ( '".$sid."', '".$title."','".$description."')";
+                      $stmt = $conn->prepare("INSERT INTO subject (sid, title, description) VALUES (?, ?, ?)");
+                      $stmt->bind_param("sss", $sid, $title, $description);
 
-                      if ($conn->query($sql) === TRUE) {
-                       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                       x.style.display='block';</script>";
+                      if ($stmt->execute()) {
+                       echo "<span class='js-show-truemsg' hidden></span>";
                      } else {
                      }
 
@@ -135,12 +144,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                    $sql = "UPDATE subject set title='".$title."',description='".$description."' where sid = '".$sid."' " ;
+                    $stmt = $conn->prepare("UPDATE subject SET title = ?, description = ? WHERE sid = ?");
+                    $stmt->bind_param("sss", $title, $description, $sid);
                   //  $sql = "INSERT INTO subject (sid,title,description) VALUES ( '".$sid."', '".$title."','".$description."')";
 
-                    if ($conn->query($sql) === TRUE) {
-                     echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                     x.style.display='block';</script>";
+                    if ($stmt->execute()) {
+                     echo "<span class='js-show-truemsg' hidden></span>";
                    } else {
                    }
 
@@ -168,12 +177,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Subject ID</label>
-                  <input name="sid" type="text" class="form-control required" id="exampleInputPassword1"  required value=<?php echo "'".$sid."'"; ?> <?php if(isset($_GET['update'])):?>disabled<?php endif; ?>>
+                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                  <input name="sid" type="text" class="form-control required" id="exampleInputPassword1"  required value="<?php echo xssEscape($sid); ?>" <?php if(isset($_GET['update'])):?>disabled<?php endif; ?>>
                 </div>
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Subject Title</label>
-                  <input name="title" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$title."'"; ?>>
+                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                  <input name="title" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($title); ?>">
                 </div>
 
 
@@ -183,7 +194,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <div class="form-group">
                   <label for="exampleFormControlTextarea1">Syllubus Details</label>
-                  <textarea name="description" class="form-control" id="exampleFormControlTextarea1" rows="10"><?php echo $description; ?></textarea>
+                  <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                  <textarea name="description" class="form-control" id="exampleFormControlTextarea1" rows="10"><?php echo xssEscape($description); ?></textarea>
                 </div>
 
 
@@ -253,7 +265,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // output data of each row
                        while($row = $result->fetch_assoc()) {
                         $class = (isset($_GET['update']) && $_GET['update'] == $row["sid"])?'subject':'';
-                        echo "<tr class='{$class}'><td> " . $row["sid"]. " </td><td> " . $row["title"]. "</td><td>" . $row["description"]. "</td><td><a href='subject.php?update=". $row["sid"]."'><small class='btn btn-sm btn-primary'>Update</small></a></td></tr>";
+                        // XSS: Escape dynamic database values before rendering them.
+                        echo "<tr class='{$class}'><td> " . xssEscape($row["sid"]). " </td><td> " . xssEscape($row["title"]). "</td><td>" . xssEscape($row["description"]). "</td><td><a href='subject.php?update=". xssEscape($row["sid"])."'><small class='btn btn-sm btn-primary'>Update</small></a></td></tr>";
                       }
                     }
 

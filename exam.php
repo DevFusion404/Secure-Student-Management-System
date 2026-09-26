@@ -1,4 +1,11 @@
-<?php session_start();
+<?php require_once 'security.php';
+require_once 'input-validation.php';
+
+// Supporting Input Validation: allow only this page's expected request fields and formats.
+validateRequestFields(
+  array('update' => 'id'),
+  array('csrf_token' => 'token', 'submit' => 'action', 'subject' => 'id', 'teacher' => 'id', 'classroom' => 'id', 'date' => 'date', 'stime' => 'time', 'etime' => 'time', 'id' => 'id', 'fname' => 'name', 'lname' => 'name', 'email' => 'email', 'dob' => 'date', 'gender' => 'gender', 'address' => 'text', 'skill' => 'longtext', 'contact' => 'contact')
+);
 
 
 include_once 'database.php';
@@ -18,8 +25,10 @@ $id =$fname =$lname = $classroom = $dob = $gender = $address = $parent=" ";
 
 
 if(isset($_GET['update'])){
-  $update = "SELECT * FROM exam WHERE id='".$_GET['update']."'";
-  $result = $conn->query($update);
+  $stmt = $conn->prepare("SELECT * FROM exam WHERE id = ?");
+  $stmt->bind_param("s", $_GET['update']);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
     // output data of each row
@@ -55,6 +64,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <title> Dashboard</title><link rel="icon" href="../img/favicon2.png">
   <!-- Tell the browser to be responsive to screen width -->
   <?php include_once 'header.php'; ?>
+  <!-- Date/time picker styles required by the exam form. -->
+  <link href="assets/vendors/bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 
 
 </head>
@@ -108,11 +119,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 
 
-                      $sql = "INSERT INTO exam(subject,teacher,classroom,`date`,stime,etime) VALUES ('".$subject."', '".$teacher."', '".$classroom."','".$date."','".$stime."','".$etime."')";
+                      $stmt = $conn->prepare("INSERT INTO exam(subject, teacher, classroom, `date`, stime, etime) VALUES (?, ?, ?, ?, ?, ?)");
+                      $stmt->bind_param("ssssss", $subject, $teacher, $classroom, $date, $stime, $etime);
 
-                      if ($conn->query($sql) === TRUE) {
-                       echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                       x.style.display='block';</script>";
+                      if ($stmt->execute()) {
+                       echo "<span class='js-show-truemsg' hidden></span>";
                      } else {
                      }
 
@@ -157,13 +168,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   try {
 
 
-                    $sql = "UPDATE exam SET fname='".$fname."',lname='".$lname."',bday='".$dob."',address='".$address."',gender='".$gender."',skill='".$skill."',contact='".$contact."',email='".$email."' WHERE id = '".$id."'";
+                    $stmt = $conn->prepare("UPDATE exam SET fname = ?, lname = ?, bday = ?, address = ?, gender = ?, skill = ?, contact = ?, email = ? WHERE id = ?");
+                    $stmt->bind_param("sssssssss", $fname, $lname, $dob, $address, $gender, $skill, $contact, $email, $id);
 
                    // $sql = "INSERT INTO Exam (id,fname,lname,bday,address,gender,skill,contact,email) VALUES ('".$id."', '".$fname."', '".$lname."','".$dob."','".$address."','".$gender."','".$skill."','".$contact."','".$email."')";
 
-                    if ($conn->query($sql) === TRUE) {
-                     echo "<script type='text/javascript'> var x = document.getElementById('truemsg');
-                     x.style.display='block';</script>";
+                    if ($stmt->execute()) {
+                     echo "<span class='js-show-truemsg' hidden></span>";
                    } else {
                    }
 
@@ -198,7 +209,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     if ($result->num_rows > 0) {
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<option value='".$row["sid"]."' >".$row["title"]."_ID:".$row["sid"]."</option>";
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<option value='".xssEscape($row["sid"])."' >".xssEscape($row["title"])."_ID:".xssEscape($row["sid"])."</option>";
                     }
                   }
                   ?>
@@ -217,7 +229,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   if ($result->num_rows > 0) {
                    // output data of each row
                    while($row = $result->fetch_assoc()) {
-                    echo "<option value='".$row["hno"]."' >".$row["title"]."_ID:".$row["hno"]."</option>";
+                    // XSS: Escape dynamic database values before rendering them.
+                    echo "<option value='".xssEscape($row["hno"])."' >".xssEscape($row["title"])."_ID:".xssEscape($row["hno"])."</option>";
                   }
                 }
                 ?>
@@ -233,7 +246,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 if ($result->num_rows > 0) {
                    // output data of each row
                  while($row = $result->fetch_assoc()) {
-                  echo "<option value='".$row["tid"]."' >".$row["fname"]." ".$row["lname"]."_ID:".$row["tid"]."</option>";
+                  // XSS: Escape dynamic database values before rendering them.
+                  echo "<option value='".xssEscape($row["tid"])."' >".xssEscape($row["fname"])." ".xssEscape($row["lname"])."_ID:".xssEscape($row["tid"])."</option>";
                 }
               }
               ?>
@@ -244,11 +258,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
             <label>Date</label>
 
-            <div class="input-group date">
-              <div class="input-group-addon">
+            <div class="input-group">
+              <button type="button" class="input-group-addon" data-open-picker="exam-date" aria-label="Select exam date">
                 <i class="fa fa-calendar"></i>
-              </div>
-              <input type="text" name='date' class="form-control pull-right" id="datepicker" placeholder="Select Student's Data of Birth">
+              </button>
+              <input type="date" name='date' class="form-control pull-right" id="exam-date" required>
             </div>
             <!-- /.input group -->
 
@@ -261,11 +275,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
               <label>Start Time:</label>
 
               <div class="input-group">
-                <input name="stime" type="text" class="form-control timepicker">
+                <input name="stime" type="time" class="form-control" id="exam-start-time" required>
 
-                <div class="input-group-addon">
+                <button type="button" class="input-group-addon" data-open-picker="exam-start-time" aria-label="Select start time">
                   <i class="fa fa-clock-o"></i>
-                </div>
+                </button>
               </div>
               <!-- /.input group -->
             </div>
@@ -278,11 +292,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
               <label>End Time:</label>
 
               <div class="input-group">
-                <input name="etime" type="text" class="form-control timepicker">
+                <input name="etime" type="time" class="form-control" id="exam-end-time" required>
 
-                <div class="input-group-addon">
+                <button type="button" class="input-group-addon" data-open-picker="exam-end-time" aria-label="Select end time">
                   <i class="fa fa-clock-o"></i>
-                </div>
+                </button>
               </div>
               <!-- /.input group -->
             </div>
@@ -366,7 +380,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                if ($result->num_rows > 0) {
                    // output data of each row
                  while($row = $result->fetch_assoc()) {
-                  echo "<tr><td> " . $row["id"]. " </td><td> " . $row["subject"]." </td><td> " . $row["teacher"]." </td><td> " . $row["classroom"]. "</td><td>" . $row["date"]. "</td><td>" . $row["stime"]. "</td><td>" . $row["etime"]. "</td></tr>";
+                  // XSS: Escape dynamic database values before rendering them.
+                  echo "<tr><td> " . xssEscape($row["id"]). " </td><td> " . xssEscape($row["subject"])." </td><td> " . xssEscape($row["teacher"])." </td><td> " . xssEscape($row["classroom"]). "</td><td>" . xssEscape($row["date"]). "</td><td>" . xssEscape($row["stime"]). "</td><td>" . xssEscape($row["etime"]). "</td></tr>";
                 }
               }
 
