@@ -195,17 +195,20 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">First Name</label>
-                  <input name="fname" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$fname."'"; ?>>
+                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                  <input name="fname" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($fname); ?>">
                 </div>
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Last Name</label>
-                  <input name="lname" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$lname."'"; ?>>
+                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                  <input name="lname" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($lname); ?>">
                 </div>
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">National Identity Card</label>
-                  <input name="nic" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$nic."'"; ?>>
+                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                  <input name="nic" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($nic); ?>">
                 </div>
 
 
@@ -222,23 +225,27 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Email</label>
-                  <input name="email" type="email" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$email."'"; ?>>
+                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                  <input name="email" type="email" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($email); ?>">
                 </div>
 
 
                 <div class="form-group">
                   <label for="exampleFormControlTextarea1">Address</label>
-                  <textarea name="address" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo $address; ?></textarea>
+                  <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                  <textarea name="address" class="form-control" id="exampleFormControlTextarea1" rows="2"><?php echo xssEscape($address); ?></textarea>
                 </div>
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Contact</label>
-                  <input name="contact" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$contact."'"; ?>>
+                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                  <input name="contact" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($contact); ?>">
                 </div>
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Occupation</label>
-                  <input name="job" type="text" class="form-control" id="exampleInputPassword1"  required value=<?php echo "'".$occupation."'"; ?>>
+                  <!-- XSS: Escape untrusted values before rendering them in HTML. -->
+                  <input name="job" type="text" class="form-control" id="exampleInputPassword1"  required value="<?php echo xssEscape($occupation); ?>">
                 </div>
 
 
@@ -311,7 +318,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // output data of each row
                        while($row = $result->fetch_assoc()) {
                         $class = (isset($_GET['update']) && $_GET['update'] == $row["pid"])?'parent':'';
-                        echo "<tr class='{$class}'><td> " . $row["pid"]. " </td><td> " . $row["fname"]." ". $row["lname"]. " </td><td> " . $row["nic"]. "</td><td>" . $row["gender"]. "</td><td>" . $row["address"]. "</td><td>" . $row["contact"]. "</td><td>" . $row["job"]. "</td><td><a href='parent.php?update=". $row["pid"]."'><small class='btn btn-sm btn-primary'>Update</small></a></td></tr>";
+                        // XSS: Escape dynamic database values before rendering them.
+                        echo "<tr class='{$class}'><td> " . xssEscape($row["pid"]). " </td><td> " . xssEscape($row["fname"])." ". xssEscape($row["lname"]). " </td><td> " . xssEscape($row["nic"]). "</td><td>" . xssEscape($row["gender"]). "</td><td>" . xssEscape($row["address"]). "</td><td>" . xssEscape($row["contact"]). "</td><td>" . xssEscape($row["job"]). "</td><td><a href='parent.php?update=". xssEscape($row["pid"])."'><small class='btn btn-sm btn-primary'>Update</small></a></td></tr>";
                       }
                     }
 

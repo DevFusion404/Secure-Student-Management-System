@@ -8,7 +8,7 @@
             <ul class=" navbar-right">
               <li class="nav-item dropdown open" style="padding-left: 15px;">
                 <a href="#" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-toggle="dropdown" aria-expanded="false">
-                  <img src="images/user.png" alt=""><?php echo $_SESSION['user']; ?>
+                  <img src="images/user.png" alt=""><!-- XSS: Escape the session display name before rendering it. --><?php echo xssEscape($_SESSION['user'] ?? ''); ?>
                 </a>
                 <div class="dropdown-menu dropdown-usermenu pull-right" aria-labelledby="navbarDropdown">
                   <a class="dropdown-item"  href="profile.php"> Profile</a>

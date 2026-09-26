@@ -135,8 +135,18 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <?php if (!isset($_GET['update'])) {
                   if (isset($_POST['submit'])) {
-                    $notice = $_POST['notice'];
-                    $odience = $_POST['odience'];
+                    $notice = isset($_POST['notice']) && is_string($_POST['notice']) ? trim($_POST['notice']) : '';
+                    $odience = isset($_POST['odience']) && is_string($_POST['odience']) ? $_POST['odience'] : '';
+
+                    if ($notice === '' || preg_match('/[<>]/', $notice)) {
+                      http_response_code(400);
+                      exit('Invalid notice content.');
+                    }
+
+                    if (!in_array($odience, array('All', 'Student', 'Parent'), true)) {
+                      http_response_code(400);
+                      exit('Invalid notice audience.');
+                    }
 
 
               // $date = date_format(new DateTime($_POST['date']),'Y-m-d');

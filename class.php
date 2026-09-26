@@ -274,7 +274,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                    // output data of each row
                        while($row = $result->fetch_assoc()) {
                         $class = (isset($_GET['update']) && $_GET['update'] == $row["hno"])?'parent':'';
-                        echo "<tr class='{$class}'><td> " . $row["hno"]. " </td><td> " . $row["title"]. "</td><td>" . $row["location"]. "</td><td>" . $row["capacity"]. "</td></tr>";
+                        // XSS: Escape dynamic database values before rendering them.
+                        echo "<tr class='{$class}'><td> " . xssEscape($row["hno"]). " </td><td> " . xssEscape($row["title"]). "</td><td>" . xssEscape($row["location"]). "</td><td>" . xssEscape($row["capacity"]). "</td></tr>";
                       }
                     }
 

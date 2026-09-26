@@ -84,7 +84,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                          if ($result->num_rows > 0) {
                    // output data of each row
                            while($row = $result->fetch_assoc()) {
-                            echo "<tr><td> " . $row["sid"]. " </td><td> " . $row["fname"]." ". $row["lname"]. " </td><td><a href='examresults-par.php?sid=". $row["sid"]."'><small class='btn btn-sm btn-success'>View Results</small></a></td></tr>";
+                            // XSS: Escape dynamic database values before rendering them.
+                            echo "<tr><td> " . xssEscape($row["sid"]). " </td><td> " . xssEscape($row["fname"])." ". xssEscape($row["lname"]). " </td><td><a href='examresults-par.php?sid=". xssEscape($row["sid"])."'><small class='btn btn-sm btn-success'>View Results</small></a></td></tr>";
                           }
                         }
 

@@ -259,7 +259,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
               <div class="form-group">
                 <label>User</label>
                 <?php if(isset($_GET['email'])): ?>
-                  <?php echo $email; ?>
+                  <!-- XSS: Escape untrusted values before rendering them in this form field. -->
+                  <?php echo xssEscape($email); ?>
                   <?php else: ?>
 
 
@@ -270,7 +271,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                       if ($result->num_rows > 0) {
                    // output data of each row
                        while($row = $result->fetch_assoc()) {
-                        echo "<option value='".$row["email"]."' > ".$row["email"]." </option>";
+                        // XSS: Escape dynamic database values before rendering them.
+                        echo "<option value='".xssEscape($row["email"])."' > ".xssEscape($row["email"])." </option>";
                       }
                     }
                     ?>
@@ -363,11 +365,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
                      if ($result->num_rows > 0) {
                    // output data of each row
                        while($row = $result->fetch_assoc()) {
-                        echo "<tr><td> " . $row["email"]. " </td><td> " . $row["role"]." </td>
+                        // XSS: Escape dynamic database values before rendering them.
+                        echo "<tr><td> " . xssEscape($row["email"]). " </td><td> " . xssEscape($row["role"])." </td>
                         <td><form method='POST' action='user.php' class='delete-user' style='display:inline'>
                           <input type='hidden' name='csrf_token' value='" . generateCSRFToken() . "'>
-                          <button type='submit' name='delete' value='" . htmlspecialchars($row["email"], ENT_QUOTES, 'UTF-8') . "' formmethod='post' formaction='user.php' formnovalidate class='btn btn-sm btn-primary'><small>Delete</small></button>
-                        </form><br><a href='user.php?email=". $row["email"]."' class='update-user'><small class='btn btn-sm btn-danger'>Update</small></a>
+                          <button type='submit' name='delete' value='" . xssEscape($row["email"]) . "' formmethod='post' formaction='user.php' formnovalidate class='btn btn-sm btn-primary'><small>Delete</small></button>
+                        </form><br><a href='user.php?email=". xssEscape($row["email"])."' class='update-user'><small class='btn btn-sm btn-danger'>Update</small></a>
                         </td></tr>";
                       }
                     }

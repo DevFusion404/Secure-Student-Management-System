@@ -109,18 +109,21 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                   <div class="form-group">
                   <label for="exampleInputPassword1">Attendance ID</label>
-                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value=<?php echo "'".$_GET['aid']."'"; ?>>
+                  <!-- XSS: Escape request values before rendering them in form fields. -->
+                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value="<?php echo xssEscape($_GET['aid'] ?? ''); ?>">
                 </div>
 
                   <div class="form-group">
                   <label for="exampleInputPassword1">Date</label>
-                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value=<?php echo "'".$_GET['date']."'"; ?>>
+                  <!-- XSS: Escape request values before rendering them in form fields. -->
+                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value="<?php echo xssEscape($_GET['date'] ?? ''); ?>">
                 </div>
 
 
                   <div class="form-group">
                   <label for="exampleInputPassword1">Subject ID</label>
-                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value=<?php echo "'".$_GET['subject']."'"; ?>>
+                  <!-- XSS: Escape request values before rendering them in form fields. -->
+                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value="<?php echo xssEscape($_GET['subject'] ?? ''); ?>">
                 </div>
 
 
@@ -128,7 +131,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                 <div class="form-group">
                   <label for="exampleInputPassword1">Start Time</label>
-                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value=<?php echo "'".$_GET['stime']."'"; ?>>
+                  <!-- XSS: Escape request values before rendering them in form fields. -->
+                  <input name="sid" type="text" class="form-control" id="exampleInputPassword1" disabled="disabled" value="<?php echo xssEscape($_GET['stime'] ?? ''); ?>">
                 </div>
 
 
@@ -152,9 +156,17 @@ scratch. This page gets rid of all links and provides the needed markup only.
                   $result = $stmt->get_result();
 
                   if ($result->num_rows > 0) {
-            echo ' <a  href="attendancelist.php?view='.$_GET['aid'].'&aid='.$_GET['aid'].'&date='.$_GET['date'].'&subject='.$_GET['subject'].'&stime='.$_GET['stime'].'"  class="btn btn-primary">View Attendance</a>';
+            // XSS: URL-encode request values and escape the rendered link attribute.
+            $viewUrl = 'attendancelist.php?' . http_build_query(array('view' => $_GET['aid'] ?? '', 'aid' => $_GET['aid'] ?? '', 'date' => $_GET['date'] ?? '', 'subject' => $_GET['subject'] ?? '', 'stime' => $_GET['stime'] ?? ''), '', '&', PHP_QUERY_RFC3986);
+            // XSS: Escape dynamic values before rendering them in HTML.
+            echo ' <a href="' . xssEscape($viewUrl) . '" class="btn btn-primary">View Attendance</a>';
               
-                                  }else{echo '<a href="attendancelist.php?mark='.$_GET['aid'].'&class='.$_GET['class'].'&aid='.$_GET['aid'].'&date='.$_GET['date'].'&subject='.$_GET['subject'].'&stime='.$_GET['stime'].'  "class="btn btn-primary">Mark Attendance</a>';}
+                                  }else{
+                                  // XSS: URL-encode request values and escape the rendered link attribute.
+                                  $markUrl = 'attendancelist.php?' . http_build_query(array('mark' => $_GET['aid'] ?? '', 'class' => $_GET['class'] ?? '', 'aid' => $_GET['aid'] ?? '', 'date' => $_GET['date'] ?? '', 'subject' => $_GET['subject'] ?? '', 'stime' => $_GET['stime'] ?? ''), '', '&', PHP_QUERY_RFC3986);
+                                  // XSS: Escape dynamic values before rendering them in HTML.
+                                  echo '<a href="' . xssEscape($markUrl) . '" class="btn btn-primary">Mark Attendance</a>';
+                                  }
 
                   ?>
 
@@ -242,10 +254,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     $x=0;
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<tr><td> " . $row["sid"]. " </td><td> " . $row["fname"]." " . $row["lname"]." </td>
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<tr><td> " . xssEscape($row["sid"]). " </td><td> " . xssEscape($row["fname"])." " . xssEscape($row["lname"])." </td>
                       <td><div class='form-group'>
-                 <input type='hidden' name='sid[]'' value='".$row["sid"]."' />
-                 <input type='hidden' name='aid[]'' value='".$_GET["aid"]."' />
+                 <input type='hidden' name='sid[]'' value='".xssEscape($row["sid"])."' />
+                 <!-- XSS: Escape request values before rendering them in form fields. -->
+                 <input type='hidden' name='aid[]'' value='".xssEscape($_GET["aid"] ?? '')."' />
                   <div class='radio '>
   <label style='width: 100px'><input type='radio' name='att[".$x."]' value='Present' checked> &nbsp&nbsp&nbspPresent</label>
   <label style='width: 100px'><input type='radio' name='att[".$x."]' value='Absent' checked> &nbsp&nbsp&nbspAbsent</label>
@@ -316,8 +330,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     
                    // output data of each row
                      while($row = $result->fetch_assoc()) {
-                      echo "<tr><td> " . $row["sid"]. " </td><td> " . $row["fname"]." " . $row["lname"]." </td>
-                      <td>" . $row["status"]. " </td>
+                      // XSS: Escape dynamic database values before rendering them.
+                      echo "<tr><td> " . xssEscape($row["sid"]). " </td><td> " . xssEscape($row["fname"])." " . xssEscape($row["lname"])." </td>
+                      <td>" . xssEscape($row["status"]). " </td>
 
 
                       </tr>"; 
