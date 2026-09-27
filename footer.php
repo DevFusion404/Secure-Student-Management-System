@@ -1,6 +1,9 @@
 
-<!-- jQuery -->
+<!-- jQuery 3.7.1 -->
 <script src="assets/vendors/jquery/dist/jquery.min.js"></script>
+<!-- jQuery Migrate 3.5.2 – restores deprecated APIs used by older plug-ins;
+     remove once all vendored plug-ins have been tested against jQuery 3 natively -->
+<script src="assets/vendors/jquery/dist/jquery-migrate-3.5.2.min.js"></script>
 <!-- Bootstrap -->
 <script src="assets/vendors/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <!-- FastClick -->
