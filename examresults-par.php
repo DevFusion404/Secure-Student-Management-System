@@ -65,34 +65,61 @@ scratch. This page gets rid of all links and provides the needed markup only.
                       <p class="text-muted font-13 m-b-30">
                         School Management System
                       </p>
+                      <?php $selectedStudentId = isset($_GET['sid']) ? (string) $_GET['sid'] : ''; ?>
                       <table id="datatable-buttons" class="table table-striped table-bordered" style="width:100%">
-                        <thead>
-                          <tr>
-                           <th>Student ID</th>
-                           <th>Full Name</th>
-                           <th>Action</th>
-                         </tr>
-                       </thead>
+                        <?php if ($selectedStudentId !== '') { ?>
+                          <thead>
+                            <tr>
+                              <th>Exam ID</th>
+                              <th>Student ID</th>
+                              <th>Marks</th>
+                              <th>Grade</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php
+                            // Show only the selected child owned by the logged-in parent.
+                            $parentId = (string) $_SESSION['uid'];
+                            $stmt = $conn->prepare(
+                              "SELECT er.exam, er.student, er.marks, er.grade
+                               FROM examresult er
+                               INNER JOIN student s ON s.sid = er.student
+                               WHERE er.student = ? AND s.parent = ?"
+                            );
+                            $stmt->bind_param("ss", $selectedStudentId, $parentId);
+                            $stmt->execute();
+                            $result = $stmt->get_result();
 
+                            while ($row = $result->fetch_assoc()) {
+                              echo "<tr><td>" . xssEscape($row["exam"]) . "</td><td>" . xssEscape($row["student"]) . "</td><td>" . xssEscape($row["marks"]) . "</td><td>" . xssEscape($row["grade"]) . "</td></tr>";
+                            }
 
-                       <tbody>
-                         <?php
+                            $stmt->close();
+                            ?>
+                          </tbody>
+                        <?php } else { ?>
+                          <thead>
+                            <tr>
+                              <th>Student ID</th>
+                              <th>Full Name</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php
+                            $sql = "SELECT * FROM student where parent =".$_SESSION['uid'];
+                            $result = $conn->query($sql);
 
-                         $sql = "SELECT * FROM student where parent =".$_SESSION['uid'];
-                         $result = $conn->query($sql);
-
-                         if ($result->num_rows > 0) {
-                   // output data of each row
-                           while($row = $result->fetch_assoc()) {
-                            // XSS: Escape dynamic database values before rendering them.
-                            echo "<tr><td> " . xssEscape($row["sid"]). " </td><td> " . xssEscape($row["fname"])." ". xssEscape($row["lname"]). " </td><td><a href='examresults-par.php?sid=". xssEscape($row["sid"])."'><small class='btn btn-sm btn-success'>View Results</small></a></td></tr>";
-                          }
-                        }
-
-                        ?>
-
-                      </tbody>
-                    </table>
+                            if ($result->num_rows > 0) {
+                              while($row = $result->fetch_assoc()) {
+                                // XSS: Escape dynamic database values before rendering them.
+                                echo "<tr><td> " . xssEscape($row["sid"]). " </td><td> " . xssEscape($row["fname"])." ". xssEscape($row["lname"]). " </td><td><a href='examresults-par.php?sid=". xssEscape($row["sid"])."'><small class='btn btn-sm btn-success'>View Results</small></a></td></tr>";
+                              }
+                            }
+                            ?>
+                          </tbody>
+                        <?php } ?>
+                      </table>
                   </div>
                 </div>
               </div>
