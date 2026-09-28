@@ -291,7 +291,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
               <div class="form-group">
                 <label for="exampleInputPassword1">Password</label>
-                <input name="password" type="text" class="form-control" id="exampleInputPassword1" placeholder="Enter Password" required>
+                <input name="password" type="password" class="form-control" id="exampleInputPassword1" placeholder="Enter Password" required>
               </div>
 
               <div class="form-group">
